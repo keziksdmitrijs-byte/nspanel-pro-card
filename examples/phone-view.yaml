@@ -1,0 +1,29 @@
+# Phone layout: portrait, scrollable pages, two tiles per row.
+# Add as a panel view to any dashboard you open on your phone.
+title: Panel
+path: panel
+type: panel
+cards:
+  - type: custom:nspanel-pro-card
+    device: phone
+    weather: weather.forecast_home
+    home_timeout: 0            # do not jump back to the start screen
+    air_conditioner:
+      enabled: true
+      entities:
+        - climate.living_room
+    solar:
+      enabled: true
+      pv_power: sensor.inverter_pv_power
+      load: sensor.inverter_load_power
+      grid_power: sensor.inverter_grid_power
+      grid_invert: true        # this inverter reports + when exporting
+    custom_buttons:
+      - name: Garage
+        icon: mdi:garage
+        action: toggle
+        entity: cover.garage_door
+      - name: Weather radar
+        icon: mdi:radar
+        action: url
+        url: https://www.windy.com

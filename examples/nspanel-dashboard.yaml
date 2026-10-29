@@ -1,0 +1,69 @@
+# Full dashboard for a Sonoff NSPanel Pro (Raw configuration editor of a new dashboard).
+# The card should be the only card of a "panel" view.
+# kiosk_mode is optional and needs https://github.com/NemesisRE/kiosk-mode
+kiosk_mode:
+  user_settings:
+    - users:
+        - nspanel          # HA user that is logged in on the panel
+      kiosk: true          # hide header and sidebar
+views:
+  - title: NSPanel
+    path: home
+    type: panel
+    cards:
+      - type: custom:nspanel-pro-card
+        device: nspanel
+        weather: weather.forecast_home
+        home_timeout: 90
+        theme: dark
+        language: en
+        accent: blue
+        recuperator:
+          enabled: true
+          power: switch.ventilation_power
+          mode: select.ventilation_mode
+          target: number.ventilation_target_temperature
+          airflow: sensor.ventilation_supply_fan_level
+          indoor: sensor.ventilation_extract_temperature
+          outdoor: sensor.ventilation_outdoor_temperature
+          supply: sensor.ventilation_supply_temperature
+          extract: sensor.ventilation_extract_temperature
+          exhaust: sensor.ventilation_exhaust_temperature
+          efficiency: sensor.ventilation_heat_recovery_efficiency
+          filter_days: sensor.ventilation_filter_days_left
+          night_cooling: switch.ventilation_night_cooling
+          boost_button: button.ventilation_boost
+        air_conditioner:
+          enabled: true
+          entities:
+            - entity: climate.living_room
+              name: Living room
+            - climate.bedroom
+        heat_pump:
+          enabled: true
+          power: switch.heat_pump_power
+          mode: select.heat_pump_mode
+          water_target: number.heat_pump_heating_target
+          dhw_target: number.heat_pump_dhw_target
+          water_out: sensor.heat_pump_flow_temperature
+          water_in: sensor.heat_pump_return_temperature
+          dhw_tank: sensor.heat_pump_dhw_temperature
+          compressor: sensor.heat_pump_compressor_frequency
+          electric_power: sensor.heat_pump_power
+          cop: sensor.heat_pump_cop
+          energy_today: sensor.heat_pump_energy_today
+        solar:
+          enabled: true
+          pv_power: sensor.inverter_pv_power
+          load: sensor.inverter_load_power
+          battery_power: sensor.inverter_battery_power
+          battery_soc: sensor.inverter_battery_soc
+          grid_power: sensor.inverter_grid_power
+          energy_today: sensor.inverter_pv_energy_today
+          import_today: sensor.inverter_grid_import_today
+          export_today: sensor.inverter_grid_export_today
+        custom_buttons:
+          - name: Cameras
+            icon: mdi:cctv
+            action: navigate
+            navigation_path: /dashboard-cameras/0

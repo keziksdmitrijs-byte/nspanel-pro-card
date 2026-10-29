@@ -1,0 +1,22 @@
+# Optional helpers that store the panel settings in Home Assistant
+# (otherwise the choice is stored in the browser / app of the device).
+# Put into configuration.yaml or a package, or create the same helpers in
+# Settings → Devices & services → Helpers → Dropdown.
+input_select:
+  nspanel_theme:
+    name: NSPanel theme
+    icon: mdi:theme-light-dark
+    options: [dark, light, auto]
+  nspanel_language:
+    name: NSPanel language
+    icon: mdi:translate
+    options: [ru, lv, en]
+  nspanel_accent:
+    name: NSPanel accent colour
+    icon: mdi:palette
+    options: [blue, teal, green, amber, orange, red, pink, purple]
+
+# Card configuration:
+#   theme_entity: input_select.nspanel_theme
+#   language_entity: input_select.nspanel_language
+#   accent_entity: input_select.nspanel_accent
