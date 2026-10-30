@@ -19,8 +19,9 @@ recuperator (MVHR ventilation), air conditioners, a heat pump, a solar inverter,
 - **Custom buttons** — extra tiles that open another dashboard/view, a URL, an entity's info dialog, or toggle an entity.
 - **Two layouts** — `nspanel` (fixed 480×480 layout scaled to the screen) or `phone` (portrait, scrollable).
 - **Menu** — dark / light / auto theme, language (Русский, Latviešu, English) and 8 accent colours, changeable right on the panel.
-- **Recuperator** — power, modes (protection / economy / comfort / boost), target temperature, airflow ring, all temperatures, recovery efficiency, filter, night cooling.
-- **Air conditioners** — any number of `climate` entities with a unit switcher, HVAC modes, fan / swing / preset pickers and extra switches (Gree quiet / xtra fan / fresh air / display are detected automatically).
+- **Clean device pages** — the main value (big ring) and the set point (big − / + buttons) take most of the screen; up to four key readings are shown in large tiles. All mode choices, extra functions and the full list of readings are collected in **one pop-up menu** opened by the mode button.
+- **Recuperator** — power, modes (protection / economy / comfort / boost), target temperature, airflow ring, temperatures, recovery efficiency, filter, night cooling.
+- **Air conditioners** — any number of `climate` entities with a unit switcher; HVAC mode, fan, swing, preset and extra switches (Gree quiet / xtra fan / fresh air / display are detected automatically) in the pop-up menu.
 - **Heat pump** — power, modes (heating / cooling / hot water / auto), heating and DHW set points, flow / return / tank temperatures, compressor, power, COP, energy, quiet / weather-compensation / DHW-boost switches.
 - **Solar inverter** — animated power-flow diagram (PV, battery with SoC ring, grid, home) and today's produced / imported / exported energy and self-use. W/kW and Wh/kWh are converted automatically.
 - **Visual editor** — everything can be configured in the UI card editor (labels in English, Russian and Latvian).
@@ -30,9 +31,13 @@ recuperator (MVHR ventilation), air conditioners, a heat pump, a solar inverter,
 |---|---|
 | ![themes](images/themes-languages.png) | ![tiles](images/adaptive-tiles.png) |
 
-| Device pages | Menu and weather |
+| Device pages | Mode pop-up menu |
 |---|---|
-| ![pages](images/device-pages.png) | ![menu](images/menu-weather.png) |
+| ![pages](images/device-pages.png) | ![popup](images/mode-popup.png) |
+
+**Menu and weather**
+
+<img src="images/menu-weather.png" width="520" alt="Menu and weather">
 
 **Phone layout**
 
@@ -164,6 +169,8 @@ A list of extra tiles (the visual editor offers two; YAML allows more).
 - Свои кнопки: переход на другой дашборд или вид, открытие ссылки, карточка сущности или переключение сущности.
 - Выбор устройства: `nspanel` (480×480, весь экран) или `phone` (вертикальная раскладка с прокруткой).
 - Меню на самой панели: тёмная / светлая / авто тема, язык (русский, латышский, английский), 8 цветов акцента.
+- Разгруженные страницы устройств: главное значение и уставка крупно, до четырёх ключевых показателей в больших плитках;
+  выбор режимов, дополнительные функции и все остальные данные собраны в одном всплывающем меню (кнопка режима).
 - Визуальный редактор с подписями на русском, латышском и английском.
 
 **Установка:** HACS → ⋮ → *Пользовательские репозитории* → `https://github.com/keziksdmitrijs-byte/nspanel-pro-card`,
