@@ -1,5 +1,5 @@
 /*!
- * NSPanel Pro Card v1.2.0
+ * NSPanel Pro Card v1.2.1
  * Full-screen smart-home panel for Home Assistant — Sonoff NSPanel Pro (480×480) or phone.
  * Clock + weather start screen, settings menu (theme / language / accent colour),
  * recuperator, air conditioner(s), heat pump, solar inverter and custom buttons.
@@ -8,7 +8,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.2.0';
+  var VERSION = '1.2.1';
   var CARD = 'nspanel-pro-card';
   var EDITOR = 'nspanel-pro-card-editor';
 
@@ -402,8 +402,8 @@
     '.note{font-size:11.5px;color:var(--tx3);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     /* segmented / mode buttons */
     '.seg{display:grid;grid-gap:8px;gap:8px}',
-    '.n1{grid-template-columns:1fr}.n2{grid-template-columns:repeat(2,1fr)}.n3{grid-template-columns:repeat(3,1fr)}',
-    '.n4{grid-template-columns:repeat(4,1fr)}.n5{grid-template-columns:repeat(5,1fr)}.n6{grid-template-columns:repeat(6,1fr)}',
+    '.n1{grid-template-columns:minmax(0,1fr)}.n2{grid-template-columns:repeat(2,minmax(0,1fr))}.n3{grid-template-columns:repeat(3,minmax(0,1fr))}',
+    '.n4{grid-template-columns:repeat(4,minmax(0,1fr))}.n5{grid-template-columns:repeat(5,minmax(0,1fr))}.n6{grid-template-columns:repeat(6,minmax(0,1fr))}',
     '.sb{height:58px;border-radius:17px;background:var(--sf);display:flex;flex-direction:column;align-items:center;justify-content:center;',
     'font-size:12.5px;font-weight:500;color:var(--tx2);box-shadow:var(--sh);min-width:0;padding:0 4px;text-align:center}',
     '.sb span{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
@@ -454,6 +454,23 @@
     '.ring-c{pointer-events:none}',
     '.ring-m{font-size:15px;font-weight:600;color:var(--tx2);margin-top:2px}.ring-m.acc{color:var(--accent)}',
     '.p-rec .ring-l{max-width:170px}',
+    '.rcard{flex:1 1 0;min-width:0;background:var(--sf);border-radius:24px;box-shadow:var(--sh);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px}',
+    '.rcard .ring-w{background:none;box-shadow:none;padding:0}',
+    '.rec-q .col{flex:1 1 0}',
+    '.p-rec .hero .ring-v{font-size:52px}.p-rec .hero .ring-v small{font-size:20px}',
+    '.p-rec .ring-l{max-width:130px}',
+    '.rc-b{display:grid;grid-template-columns:1fr 1fr;grid-gap:10px;gap:10px;width:100%;margin-top:6px}',
+    '.rc-b .stp-b{width:auto;height:48px;border-radius:15px}',
+    '.vcard{flex:1;background:var(--sf);border-radius:22px;box-shadow:var(--sh);padding:12px 14px;display:flex;flex-direction:column;justify-content:center;min-height:0}',
+    '.vc-l{display:flex;align-items:center;font-size:14px;color:var(--tx2);white-space:nowrap;overflow:hidden}.vc-l ha-icon{--mdc-icon-size:18px;margin-right:6px}',
+    '.vc-v{font-size:46px;font-weight:600;line-height:1.1;margin-top:4px;letter-spacing:-1px;white-space:nowrap}.vc-v small{font-size:18px;color:var(--tx2);font-weight:500;margin-left:2px;letter-spacing:0}',
+    '.vc-n{font-size:12.5px;color:var(--tx3);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.rec-btns .mbtn.sm{height:86px;border-radius:22px;padding:0 12px}',
+    '.rec-btns .mbtn.sm .mb-ic{width:52px;height:52px;border-radius:17px}.rec-btns .mbtn.sm .mb-ic ha-icon{--mdc-icon-size:28px}',
+    '.rec-btns .mbtn.sm .mb-v{font-size:20px}.rec-btns .mbtn.sm .mb-s{font-size:12.5px}',
+    '.dev-phone .rcard{flex:none}',
+    '.dev-phone .rec-btns .mb-more{display:none}',
+    '.dev-phone .rec-q .col{flex:none}',
     '.sh-g.c1{grid-template-columns:1fr}',
     '.fb{width:62px;height:62px;border-radius:50%;background:var(--sf3);display:flex;align-items:center;justify-content:center;margin:0 18px;flex:none;position:relative;z-index:1}',
     '.fb ha-icon{--mdc-icon-size:28px}',
@@ -1166,41 +1183,39 @@
         power: r.power ? { on: i.on, a: 'rec_power' } : null, subErr: errN > 0
       });
 
-      /* airflow — the main element */
+      /* top-left: airflow ring */
       var af = i.airflow;
       var spd = i.on && af > 0 ? (3.2 - 2.6 * clamp(af / 100, 0, 1)).toFixed(2) + 's' : '0s';
       var m3 = this._n(r.airflow_m3h);
-      var lbl = this.t('flow_speed');
       var pend = r.airflow_target ? this._pending[r.airflow_target] : null;
       var pendTxt = pend && Date.now() - pend.ts < 6000 ? '→ ' + this._num(pend.v, 0) + '%' : '';
       var center = ic('mdi:fan', 'ring-i' + (i.on && af > 0 ? ' spin' : ''), '--spd:' + spd) +
         '<div class="ring-v">' + this._num(af, 0) + '<small>%</small></div>' +
         (pendTxt ? '<div class="ring-m acc">' + pendTxt + '</div>' : isNaN(m3) ? '' : '<div class="ring-m">' + this._num(m3, 0) + ' m³/h</div>') +
-        '<div class="ring-l">' + esc(lbl) + '</div>';
-      var side = function (d) {
-        return '<button class="fb" data-a="rec_af" data-d="' + d + '">' + ic(d < 0 ? 'mdi:minus' : 'mdi:plus') + '</button>';
-      };
-      var ring = this._ring(236, af / 100, i.on ? 'var(--accent)' : 'var(--tx3)', center, {
-        solo: true, stroke: 16,
-        left: r.airflow_target ? side(-1) : '', right: r.airflow_target ? side(1) : ''
-      });
+        '<div class="ring-l">' + esc(this.t('flow_speed')) + '</div>';
+      var hasAf = !!r.airflow_target;
+      var left = '<div class="rcard">' + this._ring(hasAf ? 178 : 200, af / 100, i.on ? 'var(--accent)' : 'var(--tx3)', center, { stroke: 14 }) +
+        (hasAf ? '<div class="rc-b"><button class="stp-b" data-a="rec_af" data-d="-1">' + ic('mdi:minus') + '</button>' +
+          '<button class="stp-b" data-a="rec_af" data-d="1">' + ic('mdi:plus') + '</button></div>' : '') + '</div>';
 
-      /* compact target temperature line */
-      var tl = '';
+      /* top-right: supply temperature + target temperature */
+      var right = [];
+      var supEid = r.supply || r.indoor || r.extract;
+      if (supEid) {
+        var outd = this._n(r.outdoor);
+        right.push('<div class="vcard"><div class="vc-l">' + ic(r.supply ? 'mdi:arrow-collapse-right' : 'mdi:home-thermometer-outline') +
+          esc(r.supply ? this.t('supply') : this.t('indoor')) + '</div>' +
+          '<div class="vc-v">' + this._num(this._n(supEid), 1) + '<small>°C</small></div>' +
+          (isNaN(outd) ? '' : '<div class="vc-n">' + esc(this.t('outdoor')) + ': ' + this._num(outd, 1) + '°C</div>') + '</div>');
+      }
       if (r.target) {
         var ts = this._st(r.target);
         var tv = this._pv(r.target, this._n(r.target));
-        var indoor = this._n(r.indoor || r.extract);
-        var dis = this._ok(ts) ? '' : ' dis';
-        tl = '<div class="tline">' + ic('mdi:thermometer', 'tl-i') +
-          '<div class="tl-t"><div class="tl-l">' + esc(this.t('target')) + '</div>' +
-          (isNaN(indoor) ? '' : '<div class="tl-n">' + esc(this.t('indoor')) + ': ' + this._num(indoor, 1) + '°C</div>') + '</div>' +
-          '<div class="tl-v">' + this._num(tv, 1) + '<small>°C</small></div>' +
-          '<button class="stp-b' + dis + '" data-a="rec_t" data-d="-1">' + ic('mdi:minus') + '</button>' +
-          '<button class="stp-b' + dis + '" data-a="rec_t" data-d="1">' + ic('mdi:plus') + '</button></div>';
+        right.push(this._stepper(this.t('target'), 'mdi:thermometer', this._num(tv, 1) + '<small>°C</small>', 'rec_t', 't',
+          { small: true, disabled: !this._ok(ts) }));
       }
 
-      /* two buttons: operating mode / data */
+      /* bottom: operating mode / data */
       var btns = [];
       if (this._recModes().length || r.night_cooling) {
         var mtxt = i.on ? (i.mode ? this.t('m_' + i.mode) : this.t('on')) : this.t('off');
@@ -1209,10 +1224,12 @@
       }
       var stats = this._recStats();
       if (stats.length) {
-        var sm = stats.slice(0, 2).map(function (x) { return self._num(self._n(x[0]), x[3]) + (x[4] === '°C' ? '°' : ' ' + x[4]); }).join(' · ');
+        var sm = stats.filter(function (x) { return x[0] !== supEid; }).slice(0, 2)
+          .map(function (x) { return self._num(self._n(x[0]), x[3]) + (x[4] === '°C' ? '°' : ' ' + x[4]); }).join(' · ');
         btns.push(this._mbtn('rec_data', 'mdi:chart-box-outline', this.t('data_short'), sm, 'var(--sf3)', false, true));
       }
-      return hdr + '<div class="ctl hero">' + ring + '</div>' + tl + (btns.length ? '<div class="seg n' + btns.length + '">' + btns.join('') + '</div>' : '');
+      return hdr + '<div class="ctl hero rec-q">' + left + (right.length ? '<div class="col">' + right.join('') + '</div>' : '') + '</div>' +
+        (btns.length ? '<div class="seg n' + btns.length + ' rec-btns">' + btns.join('') + '</div>' : '');
     }
     _recModes() {
       var r = this._c._rec, self = this;
