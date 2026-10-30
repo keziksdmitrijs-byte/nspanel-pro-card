@@ -26,6 +26,7 @@ recuperator (MVHR ventilation), air conditioners, a heat pump, a solar inverter,
 - **Solar inverter** — animated power-flow diagram (PV, battery with SoC ring, grid, home) and today's produced / imported / exported energy and self-use. W/kW and Wh/kWh are converted automatically.
 - **Visual editor** — everything can be configured in the UI card editor (labels in English, Russian and Latvian).
 - Returns to the start screen after a configurable idle time.
+- **Clock screensaver** — after a period without touches a black screen with a large clock, date and weather appears (it moves slightly every minute to protect the display). It wakes on touch, when the screen is switched on, or when any configured entity changes — e.g. the proximity event of [NSPanel Pro Tools](https://github.com/seaky/nspanel_pro_tools_apk). Optional scripts run on start / wake (e.g. dim the backlight).
 
 | Themes and languages | Adaptive tiles |
 |---|---|
@@ -38,6 +39,10 @@ recuperator (MVHR ventilation), air conditioners, a heat pump, a solar inverter,
 **Menu and weather**
 
 <img src="images/menu-weather.png" width="520" alt="Menu and weather">
+
+**Clock screensaver**
+
+<img src="images/screensaver.png" width="300" alt="Screensaver">
 
 **Phone layout**
 
@@ -139,6 +144,31 @@ use `switches:` to list your own.
 
 Nodes that have no entity are not drawn.
 
+### `screensaver`
+
+| Option | Description |
+|---|---|
+| `enabled` | `true` to use the clock screensaver |
+| `timeout`, `timeout_entity` | Seconds without touches before it starts (default 60); `timeout_entity` (`input_number`) overrides it |
+| `enabled_entity` | Optional `input_boolean` to switch the screensaver on / off from HA |
+| `wake_entities` | Entities whose change wakes the panel: a proximity `event`, a presence `binary_sensor`, the Companion app `interactive` sensor… |
+| `users` | Only run for these HA users (e.g. the user logged in on the panel), so the dashboard opened on a PC is not affected |
+| `on_start`, `on_wake` | Script / scene / button to run when the screensaver starts and ends (e.g. dim and restore the backlight via ADB) |
+| `show_weather` | Show the weather line (default `true`) |
+
+```yaml
+screensaver:
+  enabled: true
+  timeout_entity: input_number.nspanel_screensaver_timeout
+  enabled_entity: input_boolean.nspanel_screensaver
+  wake_entities:
+    - event.nspanel_pro_proximity      # NSPanel Pro Tools (MQTT)
+    - binary_sensor.nspanel_pro_screen_on
+  users: [nspanel]
+  on_start: script.nspanel_screensaver_on
+  on_wake: script.nspanel_screensaver_off
+```
+
 ### `custom_buttons`
 
 A list of extra tiles (the visual editor offers two; YAML allows more).
@@ -175,6 +205,8 @@ A list of extra tiles (the visual editor offers two; YAML allows more).
 - Рекуператор: слева сверху — кольцо скорости потока (%, м³/ч, при желании − / + через `airflow_target`), справа сверху — температура притока и целевая температура, снизу — кнопки «Режим работы» и «Данные».
 - Кондиционер: отдельные кнопки «Режим работы», «Вентилятор», «Жалюзи», «Функции».
 - Тепловой насос: двойное кольцо — температура подачи и температура воды в бойлере.
+- Заставка-часы: после бездействия — чёрный экран с крупными часами, датой и погодой; просыпается от касания, при включении экрана
+  или при изменении указанных сущностей (например, события приближения из NSPanel Pro Tools).
 - Визуальный редактор с подписями на русском, латышском и английском.
 
 **Установка:** HACS → ⋮ → *Пользовательские репозитории* → `https://github.com/keziksdmitrijs-byte/nspanel-pro-card`,
