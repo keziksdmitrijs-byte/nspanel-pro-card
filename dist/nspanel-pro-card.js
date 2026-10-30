@@ -1,5 +1,5 @@
 /*!
- * NSPanel Pro Card v1.1.0
+ * NSPanel Pro Card v1.2.0
  * Full-screen smart-home panel for Home Assistant — Sonoff NSPanel Pro (480×480) or phone.
  * Clock + weather start screen, settings menu (theme / language / accent colour),
  * recuperator, air conditioner(s), heat pump, solar inverter and custom buttons.
@@ -8,7 +8,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.1.0';
+  var VERSION = '1.2.0';
   var CARD = 'nspanel-pro-card';
   var EDITOR = 'nspanel-pro-card-editor';
 
@@ -18,7 +18,7 @@
   };
   var COL = {
     heat: '#f97316', cool: '#38bdf8', dhw: '#ef4444', dry: '#14b8a6', fan: '#94a3b8',
-    sun: '#f5b301', bat: '#22c55e', grid: '#a78bfa', home: '#3b82f6'
+    sun: '#f5b301', bat: '#22c55e', grid: '#a78bfa', home: '#3b82f6', tank: '#ec4899'
   };
   var LOCALES = { ru: 'ru-RU', lv: 'lv-LV', en: 'en-GB' };
   var LANG_NAMES = { ru: 'Русский', lv: 'Latviešu', en: 'English' };
@@ -50,7 +50,7 @@
       exhaust: 'Выброс', recovery: 'Рекуперация', filter: 'Фильтр', days: 'дн.', night_cooling: 'Ночное охл.',
       fans: 'Вентиляторы', airflow: 'Расход',
       m_protection: 'Защита', m_economy: 'Эконом', m_comfort: 'Комфорт', m_boost: 'Интенсив', m_off: 'Выкл',
-      errors: 'Ошибки', standby: 'Ожидание', mode_lbl: 'Режим', modes: 'Режим работы', functions: 'Функции', data: 'Все данные', ctl: 'Режимы и функции',
+      errors: 'Ошибки', standby: 'Ожидание', mode_lbl: 'Режим', flow_speed: 'Скорость потока', data_short: 'Данные', status: 'Состояние', boiler: 'Бойлер', modes: 'Режим работы', functions: 'Функции', data: 'Все данные', ctl: 'Режимы и функции',
       hvac_auto: 'Авто', hvac_cool: 'Холод', hvac_heat: 'Тепло', hvac_dry: 'Осушение', hvac_fan_only: 'Вентиляция',
       hvac_heat_cool: 'Авто', hvac_off: 'Выкл',
       fan: 'Вентилятор', swing: 'Жалюзи', preset: 'Режим', room: 'В комнате',
@@ -90,7 +90,7 @@
       exhaust: 'Izplūde', recovery: 'Rekuperācija', filter: 'Filtrs', days: 'd.', night_cooling: 'Nakts dzes.',
       fans: 'Ventilatori', airflow: 'Plūsma',
       m_protection: 'Aizsardzība', m_economy: 'Ekonomija', m_comfort: 'Komforts', m_boost: 'Intensīvs', m_off: 'Izsl.',
-      errors: 'Kļūdas', standby: 'Gaidīšanas režīms', mode_lbl: 'Režīms', modes: 'Darba režīms', functions: 'Funkcijas', data: 'Visi dati', ctl: 'Režīmi un funkcijas',
+      errors: 'Kļūdas', standby: 'Gaidīšanas režīms', mode_lbl: 'Režīms', flow_speed: 'Plūsmas ātrums', data_short: 'Dati', status: 'Statuss', boiler: 'Boileris', modes: 'Darba režīms', functions: 'Funkcijas', data: 'Visi dati', ctl: 'Režīmi un funkcijas',
       hvac_auto: 'Auto', hvac_cool: 'Dzesēt', hvac_heat: 'Sildīt', hvac_dry: 'Žāvēt', hvac_fan_only: 'Ventilēt',
       hvac_heat_cool: 'Auto', hvac_off: 'Izsl.',
       fan: 'Ventilators', swing: 'Žalūzijas', preset: 'Režīms', room: 'Telpā',
@@ -130,7 +130,7 @@
       exhaust: 'Exhaust', recovery: 'Recovery', filter: 'Filter', days: 'd', night_cooling: 'Night cool',
       fans: 'Fans', airflow: 'Airflow',
       m_protection: 'Protection', m_economy: 'Economy', m_comfort: 'Comfort', m_boost: 'Boost', m_off: 'Off',
-      errors: 'Errors', standby: 'Standby', mode_lbl: 'Mode', modes: 'Operating mode', functions: 'Functions', data: 'All data', ctl: 'Modes & functions',
+      errors: 'Errors', standby: 'Standby', mode_lbl: 'Mode', flow_speed: 'Airflow speed', data_short: 'Data', status: 'Status', boiler: 'Boiler', modes: 'Operating mode', functions: 'Functions', data: 'All data', ctl: 'Modes & functions',
       hvac_auto: 'Auto', hvac_cool: 'Cool', hvac_heat: 'Heat', hvac_dry: 'Dry', hvac_fan_only: 'Fan',
       hvac_heat_cool: 'Auto', hvac_off: 'Off',
       fan: 'Fan', swing: 'Swing', preset: 'Preset', room: 'Room',
@@ -451,6 +451,30 @@
     '.mb-s{font-size:12.5px;color:var(--tx2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     '.mb-more{width:40px;height:40px;border-radius:13px;background:var(--sf3);display:flex;align-items:center;justify-content:center;color:var(--tx2);flex:none;margin-left:8px}',
     '.kpis{display:grid;grid-gap:8px;gap:8px}',
+    '.ring-c{pointer-events:none}',
+    '.ring-m{font-size:15px;font-weight:600;color:var(--tx2);margin-top:2px}.ring-m.acc{color:var(--accent)}',
+    '.p-rec .ring-l{max-width:170px}',
+    '.sh-g.c1{grid-template-columns:1fr}',
+    '.fb{width:62px;height:62px;border-radius:50%;background:var(--sf3);display:flex;align-items:center;justify-content:center;margin:0 18px;flex:none;position:relative;z-index:1}',
+    '.fb ha-icon{--mdc-icon-size:28px}',
+    '.p-rec .hero .ring-v{font-size:64px}.p-rec .hero .ring-v small{font-size:24px}',
+    '.r2-v{font-size:34px;font-weight:600;line-height:1;letter-spacing:-1px}.r2-v small{font-size:16px;color:var(--tx2);font-weight:500}',
+    '.r2-v.b{font-size:26px;margin-top:6px}',
+    '.r2-l{font-size:11.5px;color:var(--tx2);margin-top:1px}',
+    '.ring-i.sm{--mdc-icon-size:22px;margin-bottom:2px}',
+    '.tline{display:flex;align-items:center;height:64px;background:var(--sf);border-radius:20px;box-shadow:var(--sh);padding:0 9px 0 14px}',
+    '.tl-i{color:var(--tx2);--mdc-icon-size:22px}',
+    '.tl-t{flex:1;min-width:0;margin-left:8px}',
+    '.tl-l{font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.tl-n{font-size:11.5px;color:var(--tx3);margin-top:1px;white-space:nowrap}',
+    '.tl-v{font-size:26px;font-weight:600;margin:0 10px;white-space:nowrap}.tl-v small{font-size:13px;color:var(--tx2);font-weight:500}',
+    '.tline .stp-b{width:46px;height:46px;border-radius:15px;margin-left:6px}',
+    '.mbtn.sm{height:62px;padding:0 8px 0 8px;border-radius:19px}',
+    '.mbtn.sm .mb-ic{width:42px;height:42px;border-radius:14px}',
+    '.mbtn.sm .mb-t{margin-left:10px}.mbtn.sm .mb-v{font-size:16.5px}.mbtn.sm .mb-s{font-size:11.5px}',
+    '.mbtn.sm .mb-more{width:30px;height:30px;border-radius:10px;margin-left:4px}',
+    '.mbtn.sm .mb-more ha-icon{--mdc-icon-size:20px}',
+    '.dev-phone .fb{margin:0 2px;width:44px;height:44px}',
     '.kpi{background:var(--sf);border-radius:20px;padding:10px 12px;box-shadow:var(--sh);min-width:0;height:86px;display:flex;flex-direction:column;justify-content:space-between}',
     '.kpi-l{display:flex;align-items:center;font-size:12px;color:var(--tx2);white-space:nowrap;overflow:hidden}',
     '.kpi-l ha-icon{--mdc-icon-size:16px;margin-right:5px}',
@@ -883,18 +907,22 @@
 
     _ring(size, frac, color, center, opt) {
       opt = opt || {};
-      var sw = opt.stroke || 12;
-      var r = (size - sw) / 2 - 2, cx = size / 2, c = 2 * Math.PI * r, arc = c * 0.75;
-      var f = isNaN(frac) ? 0 : clamp(frac, 0, 1);
-      var fill = Math.max(0.0001, arc * f);
+      var sw = opt.stroke || 12, cx = size / 2;
       var rot = 'rotate(135 ' + cx + ' ' + cx + ')';
-      return '<div class="ring-w' + (opt.solo ? ' solo' : '') + '" style="--rc:' + color + '">' +
-        '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">' +
-        '<circle cx="' + cx + '" cy="' + cx + '" r="' + r + '" fill="none" stroke="var(--track)" stroke-width="' + sw + '" stroke-linecap="round" ' +
-        'style="stroke-dasharray:' + arc.toFixed(1) + ' ' + c.toFixed(1) + '" transform="' + rot + '"></circle>' +
-        '<circle class="arc" cx="' + cx + '" cy="' + cx + '" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="' + sw + '" stroke-linecap="round" ' +
-        'style="stroke-dasharray:' + fill.toFixed(1) + ' ' + c.toFixed(1) + ';opacity:' + (f > 0 ? 1 : 0) + '" transform="' + rot + '"></circle>' +
-        '</svg><div class="ring-c">' + center + '</div></div>';
+      var arcs = opt.arcs || [{ frac: frac, color: color }];
+      var svg = '';
+      arcs.forEach(function (a, k) {
+        var r = (size - sw) / 2 - 2 - k * (sw + 7), c = 2 * Math.PI * r, arc = c * 0.75;
+        var f = isNaN(a.frac) ? 0 : clamp(a.frac, 0, 1);
+        var fill = Math.max(0.0001, arc * f);
+        svg += '<circle cx="' + cx + '" cy="' + cx + '" r="' + r + '" fill="none" stroke="var(--track)" stroke-width="' + sw + '" stroke-linecap="round" ' +
+          'style="stroke-dasharray:' + arc.toFixed(1) + ' ' + c.toFixed(1) + '" transform="' + rot + '"></circle>' +
+          '<circle class="arc" cx="' + cx + '" cy="' + cx + '" r="' + r + '" fill="none" stroke="' + a.color + '" stroke-width="' + sw + '" stroke-linecap="round" ' +
+          'style="stroke-dasharray:' + fill.toFixed(1) + ' ' + c.toFixed(1) + ';opacity:' + (f > 0 ? 1 : 0) + '" transform="' + rot + '"></circle>';
+      });
+      return '<div class="ring-w' + (opt.solo ? ' solo' : '') + '" style="--rc:' + color + '">' + (opt.left || '') +
+        '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">' + svg + '</svg>' +
+        (opt.right || '') + '<div class="ring-c">' + center + '</div></div>';
     }
 
     _stepper(label, icon, valueHtml, action, key, opt) {
@@ -957,8 +985,8 @@
       return '<div class="sh-i">' + ic(icon) + '<span class="sh-il">' + esc(label) + '</span><span class="sh-iv">' + value +
         (unit ? '<small> ' + esc(unit) + '</small>' : '') + '</span></div>';
     }
-    _mbtn(kind, icon, value, sub, color, dis) {
-      return '<button class="mbtn' + (dis ? ' dis' : '') + '" data-a="sheet" data-v="' + kind + '">' +
+    _mbtn(kind, icon, value, sub, color, dis, small) {
+      return '<button class="mbtn' + (small ? ' sm' : '') + (dis ? ' dis' : '') + '" data-a="sheet" data-v="' + kind + '">' +
         '<div class="mb-ic"' + (color ? ' style="background:' + color + '"' : '') + '>' + ic(icon) + '</div>' +
         '<div class="mb-t"><div class="mb-v">' + esc(value) + '</div>' + (sub ? '<div class="mb-s">' + esc(sub) + '</div>' : '') + '</div>' +
         '<div class="mb-more">' + ic('mdi:chevron-up') + '</div></button>';
@@ -1128,7 +1156,7 @@
     _p_rec() {
       var r = this._c._rec;
       if (!r) return this._p_home();
-      var i = this._recInfo();
+      var i = this._recInfo(), self = this;
       var status = this._st(r.status);
       var errN = this._n(r.error_count, 0);
       var errS = this._st(r.error_text);
@@ -1138,32 +1166,53 @@
         power: r.power ? { on: i.on, a: 'rec_power' } : null, subErr: errN > 0
       });
 
+      /* airflow — the main element */
       var af = i.airflow;
       var spd = i.on && af > 0 ? (3.2 - 2.6 * clamp(af / 100, 0, 1)).toFixed(2) + 's' : '0s';
+      var m3 = this._n(r.airflow_m3h);
+      var lbl = this.t('flow_speed');
+      var pend = r.airflow_target ? this._pending[r.airflow_target] : null;
+      var pendTxt = pend && Date.now() - pend.ts < 6000 ? '→ ' + this._num(pend.v, 0) + '%' : '';
       var center = ic('mdi:fan', 'ring-i' + (i.on && af > 0 ? ' spin' : ''), '--spd:' + spd) +
         '<div class="ring-v">' + this._num(af, 0) + '<small>%</small></div>' +
-        '<div class="ring-l">' + esc(this.t('airflow')) + '</div>';
-      var stp = '';
+        (pendTxt ? '<div class="ring-m acc">' + pendTxt + '</div>' : isNaN(m3) ? '' : '<div class="ring-m">' + this._num(m3, 0) + ' m³/h</div>') +
+        '<div class="ring-l">' + esc(lbl) + '</div>';
+      var side = function (d) {
+        return '<button class="fb" data-a="rec_af" data-d="' + d + '">' + ic(d < 0 ? 'mdi:minus' : 'mdi:plus') + '</button>';
+      };
+      var ring = this._ring(236, af / 100, i.on ? 'var(--accent)' : 'var(--tx3)', center, {
+        solo: true, stroke: 16,
+        left: r.airflow_target ? side(-1) : '', right: r.airflow_target ? side(1) : ''
+      });
+
+      /* compact target temperature line */
+      var tl = '';
       if (r.target) {
         var ts = this._st(r.target);
         var tv = this._pv(r.target, this._n(r.target));
         var indoor = this._n(r.indoor || r.extract);
-        stp = this._stepper(this.t('target'), 'mdi:thermometer', this._num(tv, 1) + '<small>°C</small>', 'rec_t', 't',
-          { disabled: !this._ok(ts), note: isNaN(indoor) ? '' : this.t('indoor') + ': ' + this._num(indoor, 1) + '°C' });
+        var dis = this._ok(ts) ? '' : ' dis';
+        tl = '<div class="tline">' + ic('mdi:thermometer', 'tl-i') +
+          '<div class="tl-t"><div class="tl-l">' + esc(this.t('target')) + '</div>' +
+          (isNaN(indoor) ? '' : '<div class="tl-n">' + esc(this.t('indoor')) + ': ' + this._num(indoor, 1) + '°C</div>') + '</div>' +
+          '<div class="tl-v">' + this._num(tv, 1) + '<small>°C</small></div>' +
+          '<button class="stp-b' + dis + '" data-a="rec_t" data-d="-1">' + ic('mdi:minus') + '</button>' +
+          '<button class="stp-b' + dis + '" data-a="rec_t" data-d="1">' + ic('mdi:plus') + '</button></div>';
       }
-      var ring = this._ring(stp ? 196 : 232, af / 100, i.on ? 'var(--accent)' : 'var(--tx3)', center, { solo: !stp, stroke: 14 });
 
-      var mb = '';
+      /* two buttons: operating mode / data */
+      var btns = [];
       if (this._recModes().length || r.night_cooling) {
         var mtxt = i.on ? (i.mode ? this.t('m_' + i.mode) : this.t('on')) : this.t('off');
         if (i.mode === 'boost' && i.boostLeft > 0) mtxt += ' · ' + Math.ceil(i.boostLeft / 60) + ' min';
-        var subs = [this.t('mode_lbl')];
-        if (r.night_cooling) subs.push(this.t('night_cooling') + ': ' + (this._isOn(r.night_cooling) ? this.t('on') : this.t('off')));
-        mb = this._mbtn('rec', REC_ICON[i.mode] || 'mdi:fan', mtxt, subs.join(' · '), i.on ? '' : 'var(--sf3)');
+        btns.push(this._mbtn('rec_mode', REC_ICON[i.mode] || 'mdi:fan', mtxt, this.t('modes'), i.on ? '' : 'var(--sf3)', false, true));
       }
-      var self = this;
-      var kp = this._kpis(this._recStats().map(function (x) { return self._kpi(x[1], x[2], self._num(self._n(x[0]), x[3]), x[4], x[5]); }));
-      return hdr + '<div class="ctl hero">' + ring + (stp ? '<div class="col">' + stp + '</div>' : '') + '</div>' + mb + kp;
+      var stats = this._recStats();
+      if (stats.length) {
+        var sm = stats.slice(0, 2).map(function (x) { return self._num(self._n(x[0]), x[3]) + (x[4] === '°C' ? '°' : ' ' + x[4]); }).join(' · ');
+        btns.push(this._mbtn('rec_data', 'mdi:chart-box-outline', this.t('data_short'), sm, 'var(--sf3)', false, true));
+      }
+      return hdr + '<div class="ctl hero">' + ring + '</div>' + tl + (btns.length ? '<div class="seg n' + btns.length + '">' + btns.join('') + '</div>' : '');
     }
     _recModes() {
       var r = this._c._rec, self = this;
@@ -1176,28 +1225,40 @@
       var fd = this._n(r.filter_days);
       [[r.outdoor, 'mdi:home-thermometer-outline', this.t('outdoor'), 1, '°C'],
         [r.supply, 'mdi:arrow-collapse-right', this.t('supply'), 1, '°C'],
-        [r.efficiency, 'mdi:recycle', this.t('recovery'), 0, '%'],
-        [r.filter_days, 'mdi:air-filter', this.t('filter'), 0, this.t('days'), { warn: fd >= 0 && fd < 10 }],
         [r.extract, 'mdi:arrow-expand-left', this.t('extract'), 1, '°C'],
         [r.exhaust, 'mdi:export', this.t('exhaust'), 1, '°C'],
-        [r.fan_rpm || r.fan_supply_rpm, 'mdi:fan', this.t('fans'), 0, this.t('u_rpm')]
+        [r.efficiency, 'mdi:recycle', this.t('recovery'), 0, '%'],
+        [r.airflow_m3h, 'mdi:weather-windy', this.t('airflow'), 0, 'm³/h'],
+        [r.fan_rpm || r.fan_supply_rpm, 'mdi:fan', this.t('fans'), 0, this.t('u_rpm')],
+        [r.filter_days, 'mdi:air-filter', this.t('filter'), 0, this.t('days'), { warn: fd >= 0 && fd < 10 }]
       ].forEach(function (x) { if (x[0]) out.push(x); });
       return out;
     }
-    _sh_rec() {
+    _sh_rec_mode() {
       var r = this._c._rec, i = this._recInfo(), self = this;
       if (!r) return null;
       var modes = this._recModes().map(function (m) {
         var lbl = self.t('m_' + m);
         if (m === 'boost' && i.boostLeft > 0) lbl += ' · ' + Math.ceil(i.boostLeft / 60) + ' min';
-        return self._shOpt(REC_ICON[m], lbl, i.on && i.mode === m, 'rec_mode', { v: m });
+        return self._shOpt(REC_ICON[m], lbl, i.on && i.mode === m, 'rec_mode', { v: m, close: 1 });
       });
       var fn = r.night_cooling ? [this._shOpt('mdi:weather-night', this.t('night_cooling'), this._isOn(r.night_cooling), 'toggle', { e: r.night_cooling })] : [];
-      var data = this._recStats().map(function (x) { return self._shInfo(x[1], x[2], self._num(self._n(x[0]), x[3]), x[4]); });
       return {
-        title: this.t('ctl'),
-        sections: [this._shSec(this.t('modes'), 'mdi:tune-variant', modes, 2), this._shSec(this.t('functions'), 'mdi:toggle-switch-outline', fn, 2),
-          this._shSec(this.t('data'), 'mdi:chart-box-outline', data, 2)]
+        title: this.t('modes'),
+        sections: [this._shSec(this.t('modes'), 'mdi:tune-variant', modes, 2), this._shSec(this.t('functions'), 'mdi:toggle-switch-outline', fn, 2)]
+      };
+    }
+    _sh_rec_data() {
+      var r = this._c._rec, self = this;
+      if (!r) return null;
+      var data = this._recStats().map(function (x) { return self._shInfo(x[1], x[2], self._num(self._n(x[0]), x[3]), x[4]); });
+      var errN = this._n(r.error_count, NaN), errS = this._st(r.error_text), st = this._st(r.status);
+      var extra = [];
+      if (this._ok(st)) extra.push(this._shInfo('mdi:information-outline', this.t('status'), esc(this._recStatusText(st.state)), ''));
+      if (!isNaN(errN)) extra.push(this._shInfo('mdi:alert-circle-outline', this.t('errors'), errN > 0 && this._ok(errS) ? esc(errS.state) : this._num(errN, 0), ''));
+      return {
+        title: this.t('data_short'),
+        sections: [this._shSec(this.t('data'), 'mdi:chart-box-outline', data, 2), this._shSec(this.t('status'), 'mdi:information-outline', extra, 1)]
       };
     }
 
@@ -1250,58 +1311,77 @@
       var at = s.attributes;
       var min = Number(at.min_temp) || 16, max = Number(at.max_temp) || 30;
       var tgt = this._pv(a.entity + ':t', Number(at.temperature));
-      var cur = Number(at.current_temperature);
+      var cur = Number(at.current_temperature), hum = Number(at.current_humidity);
       var mcol = st.on ? (HVAC_COL[s.state] || 'var(--accent)') : 'var(--tx3)';
       var center = ic(HVAC_ICON[s.state] || 'mdi:air-conditioner', 'ring-i' + (st.on && s.state === 'fan_only' ? ' spin' : ''), '--spd:2s') +
         '<div class="ring-v">' + this._num(cur, 0) + '<small>°C</small></div>' +
-        '<div class="ring-l">' + esc(this.t('room')) + '</div>';
+        '<div class="ring-l">' + esc(this.t('room')) + (isNaN(hum) ? '' : ' · ' + this._num(hum, 0) + '%') + '</div>';
       var ring = this._ring(212, (tgt - min) / (max - min), mcol, center, { stroke: 14 });
       var stp = this._stepper(this.t('target'), 'mdi:thermometer', this._num(tgt, (Number(at.target_temp_step) || 1) < 1 ? 1 : 0) + '<small>°C</small>',
         'ac_t', 't', { disabled: !st.ok });
 
-      var subs = [];
-      if (at.fan_mode) subs.push(this.t('fan') + ': ' + this._acOptLabel('fan', at.fan_mode));
-      if (at.swing_mode) subs.push(this.t('swing') + ': ' + this._acOptLabel('swing', at.swing_mode));
-      if (at.preset_mode && at.preset_mode !== 'none') subs.push(this._acOptLabel('preset', at.preset_mode));
-      var mb = this._mbtn('ac', st.on ? (HVAC_ICON[s.state] || 'mdi:air-conditioner') : 'mdi:power',
-        st.on ? this.t('hvac_' + s.state) : this.t('off'), subs.join(' · ') || this.t('mode_lbl'),
-        st.on ? (HVAC_COL[s.state] || '') : 'var(--sf3)', !st.ok);
-
-      var kp = [];
-      var hum = Number(at.current_humidity);
-      if (!isNaN(hum)) kp.push(this._kpi('mdi:water-percent', this.t('humidity'), this._num(hum, 0), '%'));
-      return hdr + '<div class="ctl hero">' + ring + '<div class="col">' + stp + '</div></div>' + mb + this._kpis(kp);
+      var dis = !st.ok, btns = [];
+      var msub = this.t('modes') + (at.preset_mode && at.preset_mode !== 'none' ? ' · ' + this._acOptLabel('preset', at.preset_mode) : '');
+      btns.push(this._mbtn('ac_mode', st.on ? (HVAC_ICON[s.state] || 'mdi:air-conditioner') : 'mdi:power',
+        st.on ? this.t('hvac_' + s.state) : this.t('off'), msub, st.on ? (HVAC_COL[s.state] || '') : 'var(--sf3)', dis, true));
+      if (at.fan_modes && at.fan_modes.length) {
+        btns.push(this._mbtn('ac_fan', 'mdi:fan', this._acOptLabel('fan', at.fan_mode), this.t('fan'), 'var(--sf3)', dis, true));
+      }
+      if (at.swing_modes && at.swing_modes.length) {
+        btns.push(this._mbtn('ac_swing', 'mdi:arrow-oscillating', this._acOptLabel('swing', at.swing_mode), this.t('swing'), 'var(--sf3)', dis, true));
+      }
+      var sws = this._acSwitches(a);
+      if (sws.length) {
+        var onN = sws.filter(function (e) { return self._isOn(e); }).length;
+        btns.push(this._mbtn('ac_fn', 'mdi:toggle-switch-outline', onN ? this.t('on') + ': ' + onN + '/' + sws.length : this.t('off'),
+          this.t('functions'), onN ? '' : 'var(--sf3)', dis, true));
+      }
+      return hdr + '<div class="ctl hero">' + ring + '<div class="col">' + stp + '</div></div>' +
+        '<div class="seg n2">' + btns.join('') + '</div>';
     }
     _acSwitches(a) {
       var self = this, obj = a.entity.split('.')[1];
       return (a.switches || AC_SWITCHES.map(function (x) { return 'switch.' + obj + '_' + x[0]; }))
         .filter(function (e) { return !!self._st(e); });
     }
-    _sh_ac() {
-      var self = this, a = this._c._acs[this._acIdx];
+    _acCur() {
+      var a = this._c._acs[this._acIdx];
       if (!a) return null;
-      var st = this._acState(a), s = st.s;
-      if (!s) return null;
-      var at = s.attributes;
-      var modes = (at.hvac_modes || []).filter(function (m) { return m !== 'off'; }).map(function (m) {
-        return self._shOpt(HVAC_ICON[m] || 'mdi:help', self.t('hvac_' + m), st.on && s.state === m, 'ac_mode', { v: m }, !st.ok);
+      var st = this._acState(a);
+      return st.s ? { a: a, st: st, s: st.s, at: st.s.attributes } : null;
+    }
+    _acGroup(x, kind, icon, cols) {
+      var self = this;
+      return this._shSec(this.t(kind), icon, (x.at[kind + '_modes'] || []).map(function (o) {
+        return self._shOpt(null, self._acOptLabel(kind, o), x.at[kind + '_mode'] === o, 'ac_set', { k: kind, v: o, close: 1 }, !x.st.ok);
+      }), cols || 3);
+    }
+    _sh_ac_mode() {
+      var x = this._acCur(), self = this;
+      if (!x) return null;
+      var modes = (x.at.hvac_modes || []).filter(function (m) { return m !== 'off'; }).map(function (m) {
+        return self._shOpt(HVAC_ICON[m] || 'mdi:help', self.t('hvac_' + m), x.st.on && x.s.state === m, 'ac_mode', { v: m, close: 1 }, !x.st.ok);
       });
-      var group = function (kind, icon) {
-        return self._shSec(self.t(kind), icon, (at[kind + '_modes'] || []).map(function (o) {
-          return self._shOpt(null, self._acOptLabel(kind, o), at[kind + '_mode'] === o, 'ac_set', { k: kind, v: o }, !st.ok);
-        }), 3);
-      };
-      var sws = this._acSwitches(a).map(function (e) {
+      return { title: this.t('modes'), sections: [this._shSec(this.t('modes'), 'mdi:tune-variant', modes, 3), this._acGroup(x, 'preset', 'mdi:star-four-points-outline')] };
+    }
+    _sh_ac_fan() {
+      var x = this._acCur();
+      return x ? { title: this.t('fan'), sections: [this._acGroup(x, 'fan', 'mdi:fan')] } : null;
+    }
+    _sh_ac_swing() {
+      var x = this._acCur();
+      return x ? { title: this.t('swing'), sections: [this._acGroup(x, 'swing', 'mdi:arrow-oscillating')] } : null;
+    }
+    _sh_ac_fn() {
+      var x = this._acCur(), self = this;
+      if (!x) return null;
+      var sws = this._acSwitches(x.a).map(function (e) {
         var key = null, icon = 'mdi:toggle-switch-outline';
-        AC_SWITCHES.forEach(function (x) { if (e.slice(-x[0].length) === x[0]) { key = x[0]; icon = x[1]; } });
+        AC_SWITCHES.forEach(function (y) { if (e.slice(-y[0].length) === y[0]) { key = y[0]; icon = y[1]; } });
         var es = self._st(e);
         return self._shOpt(icon, key ? self.t('x_' + key) : (es.attributes.friendly_name || e), es.state === 'on', 'toggle', { e: e }, !self._ok(es));
       });
-      return {
-        title: this._acName(a, this._acIdx),
-        sections: [this._shSec(this.t('modes'), 'mdi:tune-variant', modes, 3), group('fan', 'mdi:fan'), group('swing', 'mdi:arrow-oscillating'),
-          group('preset', 'mdi:star-four-points-outline'), this._shSec(this.t('functions'), 'mdi:toggle-switch-outline', sws, 2)]
-      };
+      return { title: this.t('functions'), sections: [this._shSec(this.t('functions'), 'mdi:toggle-switch-outline', sws, 2)] };
     }
     _acOptLabel(kind, v) {
       if (v === undefined || v === null) return '—';
@@ -1373,9 +1453,21 @@
       var scol = { heat: COL.heat, cool: COL.cool, dhw: COL.dhw, idle: 'var(--tx3)', off: 'var(--tx3)' }[i.status] || 'var(--accent)';
       var sicon = { heat: 'mdi:fire', cool: 'mdi:snowflake', dhw: 'mdi:water-boiler', idle: 'mdi:pause-circle-outline', off: 'mdi:power' }[i.status] || 'mdi:heat-pump-outline';
       var wout = this._n(c.water_out);
-      var center = ic(sicon, 'ring-i' + (i.status === 'heat' || i.status === 'dhw' || i.status === 'cool' ? ' pulse' : '')) +
-        '<div class="ring-v">' + this._num(wout, 1) + '<small>°</small></div>' +
-        '<div class="ring-l">' + esc(this.t('flow')) + '</div>';
+      var tank = c.dhw_tank ? this._n(c.dhw_tank) : NaN;
+      var fcol = i.status === 'cool' ? COL.cool : i.on ? COL.heat : 'var(--tx3)';
+      var tcol = c.dhw_tank ? (i.on ? COL.tank : 'var(--tx3)') : null;
+      var center;
+      if (c.dhw_tank) {
+        center = ic(sicon, 'ring-i sm' + (i.status === 'heat' || i.status === 'dhw' || i.status === 'cool' ? ' pulse' : ''), 'color:' + scol) +
+          '<div class="r2-v" style="color:' + fcol + '">' + this._num(wout, 1) + '<small>°</small></div>' +
+          '<div class="r2-l">' + esc(this.t('flow')) + '</div>' +
+          '<div class="r2-v b" style="color:' + tcol + '">' + this._num(tank, 1) + '<small>°</small></div>' +
+          '<div class="r2-l">' + esc(this.t('boiler')) + '</div>';
+      } else {
+        center = ic(sicon, 'ring-i' + (i.status === 'heat' || i.status === 'dhw' || i.status === 'cool' ? ' pulse' : '')) +
+          '<div class="ring-v">' + this._num(wout, 1) + '<small>°</small></div>' +
+          '<div class="ring-l">' + esc(this.t('flow')) + '</div>';
+      }
 
       var wc = c.weather_comp ? this._isOn(c.weather_comp) : false;
       var steppers = [];
@@ -1388,7 +1480,9 @@
         var dt = this._pv(c.dhw_target, this._targetVal(c.dhw_target));
         steppers.push(this._stepper(this.t('dhw'), 'mdi:water-boiler', this._num(dt, 0) + '<small>°C</small>', 'hp_t', 'd', { small: true }));
       }
-      var ring = this._ring(steppers.length ? 184 : 224, (wout - 10) / 50, scol, center, { stroke: 14, solo: !steppers.length });
+      var ringOpt = { stroke: c.dhw_tank ? 12 : 14, solo: !steppers.length };
+      if (c.dhw_tank) ringOpt.arcs = [{ frac: (wout - 10) / 50, color: fcol }, { frac: (tank - 10) / 60, color: tcol }];
+      var ring = this._ring(steppers.length ? 200 : 232, (wout - 10) / 50, scol, center, ringOpt);
 
       var mb = '';
       if (i.modes.length || c.quiet || c.weather_comp || c.dhw_boost) {
@@ -1401,14 +1495,15 @@
         mb = this._mbtn('hp', cm ? cm.icon : 'mdi:heat-pump-outline', !i.on ? this.t('off') : cm ? this.t('hp_' + cm.key) : stTxt,
           subs.join(' · '), i.on ? '' : 'var(--sf3)');
       }
-      var kp = this._kpis(this._hpStats().map(function (x) { return self._kpi(x[0], x[1], x[2], x[3]); }));
+      var kp = this._kpis(this._hpStats().filter(function (x) { return !(c.dhw_tank && x[4] === 'tank'); })
+        .map(function (x) { return self._kpi(x[0], x[1], x[2], x[3]); }));
       return hdr + '<div class="ctl hero">' + ring + (steppers.length ? '<div class="col">' + steppers.join('') + '</div>' : '') + '</div>' + mb + kp;
     }
     _hpStats() {
       var c = this._c._hp, i = this._hpInfo(), out = [];
       var pkw = toKw(this._st(c.electric_power)), cop = this._n(c.cop), o = this._outdoor();
       if (!isNaN(o)) out.push(['mdi:home-thermometer-outline', this.t('outdoor'), this._num(o, 1), '°C']);
-      if (c.dhw_tank) out.push(['mdi:water-thermometer', this.t('tank'), this._num(this._n(c.dhw_tank), 1), '°C']);
+      if (c.dhw_tank) out.push(['mdi:water-thermometer', this.t('tank'), this._num(this._n(c.dhw_tank), 1), '°C', 'tank']);
       if (c.electric_power) out.push(['mdi:flash', this.t('power'), this._num(pkw, pkw < 10 ? 1 : 0), this.t('u_kw')]);
       if (c.cop) out.push(['mdi:gauge', this.t('cop'), this._num(cop, 1), '']);
       if (c.water_in) out.push(['mdi:thermometer-chevron-down', this.t('ret'), this._num(this._n(c.water_in), 1), '°C']);
@@ -1421,7 +1516,7 @@
       var c = this._c._hp, self = this;
       if (!c) return null;
       var i = this._hpInfo();
-      var modes = i.modes.map(function (m) { return self._shOpt(m.icon, self.t('hp_' + m.key), i.on && i.mode === m.key, 'hp_mode', { v: m.key }); });
+      var modes = i.modes.map(function (m) { return self._shOpt(m.icon, self.t('hp_' + m.key), i.on && i.mode === m.key, 'hp_mode', { v: m.key, close: 1 }); });
       var fn = [[c.quiet, 'mdi:volume-off', 'quiet'], [c.weather_comp, 'mdi:chart-bell-curve-cumulative', 'weather_comp'], [c.dhw_boost, 'mdi:lightning-bolt', 'dhw_boost']]
         .filter(function (x) { return !!x[0]; })
         .map(function (x) { return self._shOpt(x[1], self.t(x[2]), self._isOn(x[0]), 'toggle', { e: x[0] }); });
@@ -1595,6 +1690,7 @@
       if (!el) return;
       this._lastTouch = Date.now();
       var a = el.getAttribute('data-a');
+      if (el.getAttribute('data-close') && this._sheet) { this._sheet = null; this._render(); }
       var d = function (k) { return el.getAttribute('data-' + k); };
       var c = this._c, self = this;
 
@@ -1624,6 +1720,15 @@
             var opt = this._recOption(m);
             if (opt && rc.mode) this._selectOption(rc.mode, opt);
           }
+          return;
+        }
+        case 'rec_af': {
+          var ra = c._rec, as = this._st(ra.airflow_target);
+          if (!as) return;
+          var ast = Number(ra.airflow_step) || 10;
+          var amin = Number(as.attributes.min), amax = Number(as.attributes.max);
+          this._bump(ra.airflow_target, this._pv(ra.airflow_target, parseFloat(as.state)), Number(d('d')) * ast,
+            isNaN(amin) ? 0 : amin, isNaN(amax) ? 100 : amax, ast, function (v) { self._setNumber(ra.airflow_target, v); });
           return;
         }
         case 'rec_t': {
@@ -1705,7 +1810,7 @@
       enabled: 'Connected (show on panel)', name: 'Name (optional)',
       power: 'Power switch', mode: 'Mode (select)', target: 'Target temperature (number)', target_step: 'Target step',
       indoor: 'Indoor temperature', outdoor: 'Outdoor temperature', supply: 'Supply air temperature', extract: 'Extract air temperature',
-      exhaust: 'Exhaust air temperature', efficiency: 'Heat recovery efficiency %', airflow: 'Airflow / fan level %', fan_rpm: 'Fan speed (rpm)',
+      exhaust: 'Exhaust air temperature', efficiency: 'Heat recovery efficiency %', airflow: 'Airflow / fan level %', airflow_target: 'Airflow set point % (number)', airflow_step: 'Airflow step', airflow_m3h: 'Airflow m³/h', fan_rpm: 'Fan speed (rpm)',
       filter_days: 'Days until filter change', status: 'Status sensor', error_count: 'Active errors count', error_text: 'Error text',
       boost_button: 'Boost button / script', boost_remaining: 'Boost time left (s)', night_cooling: 'Night cooling switch',
       mode_protection: 'Option for “Protection”', mode_economy: 'Option for “Economy”', mode_comfort: 'Option for “Comfort”', mode_boost: 'Option for “Boost”',
@@ -1734,7 +1839,7 @@
       enabled: 'Подключено (показывать на панели)', name: 'Название (необязательно)',
       power: 'Выключатель питания', mode: 'Режим (select)', target: 'Целевая температура (number)', target_step: 'Шаг уставки',
       indoor: 'Температура в доме', outdoor: 'Наружная температура', supply: 'Температура притока', extract: 'Температура вытяжки',
-      exhaust: 'Температура выброса', efficiency: 'Эффективность рекуперации %', airflow: 'Расход / уровень вентилятора %', fan_rpm: 'Обороты вентилятора',
+      exhaust: 'Температура выброса', efficiency: 'Эффективность рекуперации %', airflow: 'Расход / уровень вентилятора %', airflow_target: 'Уставка расхода % (number)', airflow_step: 'Шаг расхода', airflow_m3h: 'Расход м³/ч', fan_rpm: 'Обороты вентилятора',
       filter_days: 'Дней до замены фильтра', status: 'Сенсор статуса', error_count: 'Количество ошибок', error_text: 'Текст ошибок',
       boost_button: 'Кнопка / скрипт интенсивного режима', boost_remaining: 'Осталось интенсивного режима (с)', night_cooling: 'Ночное охлаждение (выключатель)',
       mode_protection: 'Опция для «Защита»', mode_economy: 'Опция для «Эконом»', mode_comfort: 'Опция для «Комфорт»', mode_boost: 'Опция для «Интенсив»',
@@ -1763,7 +1868,7 @@
       enabled: 'Pievienots (rādīt panelī)', name: 'Nosaukums (neobligāti)',
       power: 'Barošanas slēdzis', mode: 'Režīms (select)', target: 'Mērķa temperatūra (number)', target_step: 'Iestatījuma solis',
       indoor: 'Iekštelpu temperatūra', outdoor: 'Āra temperatūra', supply: 'Pieplūdes temperatūra', extract: 'Nosūces temperatūra',
-      exhaust: 'Izplūdes temperatūra', efficiency: 'Rekuperācijas efektivitāte %', airflow: 'Plūsma / ventilatora līmenis %', fan_rpm: 'Ventilatora apgriezieni',
+      exhaust: 'Izplūdes temperatūra', efficiency: 'Rekuperācijas efektivitāte %', airflow: 'Plūsma / ventilatora līmenis %', airflow_target: 'Plūsmas iestatījums % (number)', airflow_step: 'Plūsmas solis', airflow_m3h: 'Plūsma m³/h', fan_rpm: 'Ventilatora apgriezieni',
       filter_days: 'Dienas līdz filtra maiņai', status: 'Statusa sensors', error_count: 'Kļūdu skaits', error_text: 'Kļūdu teksts',
       boost_button: 'Intensīvā režīma poga / skripts', boost_remaining: 'Atlikušais intensīvā režīma laiks (s)', night_cooling: 'Nakts dzesēšanas slēdzis',
       mode_protection: 'Opcija “Aizsardzība”', mode_economy: 'Opcija “Ekonomija”', mode_comfort: 'Opcija “Komforts”', mode_boost: 'Opcija “Intensīvs”',
@@ -1992,7 +2097,9 @@
           TX('name'),
           G([E('power', ['switch', 'input_boolean']), E('mode', ['select', 'input_select']),
             E('target', ['number', 'input_number']), { name: 'target_step', selector: { number: { min: 0.1, max: 5, step: 0.1, mode: 'box' } } }]),
-          G([E('airflow', SENS), E('indoor', SENS), E('outdoor', SENS), E('supply', SENS), E('extract', SENS), E('exhaust', SENS),
+          G([E('airflow', SENS), E('airflow_target', ['number', 'input_number']), E('airflow_m3h', SENS),
+            { name: 'airflow_step', selector: { number: { min: 1, max: 50, step: 1, mode: 'box' } } }]),
+          G([E('indoor', SENS), E('outdoor', SENS), E('supply', SENS), E('extract', SENS), E('exhaust', SENS),
             E('efficiency', SENS), E('fan_rpm', SENS), E('filter_days', SENS), E('night_cooling', ['switch', 'input_boolean']),
             E('boost_button', ['button', 'input_button', 'script']), E('boost_remaining', SENS),
             E('status', ['sensor', 'select', 'input_select']), E('error_count', SENS)]),
