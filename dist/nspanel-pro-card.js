@@ -1,5 +1,5 @@
 /*!
- * NSPanel Pro Card v1.2.1
+ * NSPanel Pro Card v1.3.0
  * Full-screen smart-home panel for Home Assistant — Sonoff NSPanel Pro (480×480) or phone.
  * Clock + weather start screen, settings menu (theme / language / accent colour),
  * recuperator, air conditioner(s), heat pump, solar inverter and custom buttons.
@@ -8,7 +8,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.2.1';
+  var VERSION = '1.3.0';
   var CARD = 'nspanel-pro-card';
   var EDITOR = 'nspanel-pro-card-editor';
 
@@ -264,6 +264,7 @@
     n._hp = sec(c.heat_pump);
     if (n._hp && !n._hp.electric_power && n._hp.power_kw) n._hp = Object.assign({}, n._hp, { electric_power: n._hp.power_kw });
     n._solar = sec(c.solar);
+    n._ss = isObj(c.screensaver) && c.screensaver.enabled !== false ? c.screensaver : null;
     n._buttons = (c.custom_buttons || []).filter(function (b) {
       return isObj(b) && b.enabled !== false && (b.name || b.entity || b.navigation_path || b.url);
     });
@@ -570,7 +571,14 @@
     '.sh-o.on{background:var(--accent);color:#fff}',
     '.toast{position:absolute;left:12px;right:12px;bottom:12px;background:#ef4444;color:#fff;border-radius:14px;padding:10px 14px;font-size:13px;z-index:20;animation:fo .2s}',
     '.na{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--tx2);text-align:center}',
-    '.na ha-icon{--mdc-icon-size:48px;margin-bottom:8px;color:var(--tx3)}'
+    '.na ha-icon{--mdc-icon-size:48px;margin-bottom:8px;color:var(--tx3)}',
+    '.ss{position:absolute;top:0;left:0;right:0;bottom:0;background:#000;color:#e9ecf1;z-index:50;display:flex;align-items:center;justify-content:center;animation:fo 1.2s ease}',
+    '.ss-in{text-align:center;transition:transform 3s ease}',
+    '.ss-t{font-size:156px;font-weight:200;letter-spacing:-6px;line-height:1;font-variant-numeric:tabular-nums}',
+    '.ss-d{font-size:22px;color:#8a93a3;margin-top:10px}',
+    '.ss-w{display:flex;align-items:center;justify-content:center;margin-top:26px;font-size:30px;color:#cfd4dc}',
+    '.ss-w ha-icon{--mdc-icon-size:38px;margin-right:10px}.ss-w small{font-size:17px;color:#7d8696;margin-left:12px}',
+    '.ss.ph .ss-t{font-size:104px;letter-spacing:-4px}'
   ].join('\n');
 
   /* ==================================================================== card */
@@ -636,6 +644,7 @@
       if (first) this._subscribeForecast();
       var sig = this._signature();
       if (sig !== this._sig) { this._sig = sig; this._render(); }
+      this._checkWake();
     }
     get hass() { return this._hass; }
 
@@ -646,6 +655,8 @@
       this._tick = setInterval(function () { self._onTick(); }, 1000);
       this._onResize = function () { self._fit(); };
       window.addEventListener('resize', this._onResize);
+      this._onVis = function () { if (document.visibilityState === 'visible' && self._ssOn) self._wake(); };
+      document.addEventListener('visibilitychange', this._onVis);
       if (this._hass && this._c) {
         this._subscribeForecast();
         this._render(true);
@@ -656,6 +667,7 @@
     disconnectedCallback() {
       clearInterval(this._tick);
       window.removeEventListener('resize', this._onResize);
+      document.removeEventListener('visibilitychange', this._onVis);
       this._unsubForecast();
     }
 
@@ -663,10 +675,13 @@
     _build() {
       var self = this;
       this.shadowRoot.innerHTML = '<style>' + STYLE + '</style>' +
-        '<div class="screen t-dark" id="screen"><div class="page" id="page"></div><div id="ovl"></div></div>';
+        '<div class="screen t-dark" id="screen"><div class="page" id="page"></div><div id="ovl"></div><div id="ss"></div></div>';
       this._screen = this.shadowRoot.getElementById('screen');
       this._pageEl = this.shadowRoot.getElementById('page');
       this._ovlEl = this.shadowRoot.getElementById('ovl');
+      this._ssEl = this.shadowRoot.getElementById('ss');
+      this._ssEl.addEventListener('pointerdown', function (e) { e.preventDefault(); e.stopPropagation(); self._wake(); });
+      this._ssEl.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); });
       this.shadowRoot.addEventListener('click', function (e) { self._onClick(e); });
       this.shadowRoot.addEventListener('pointerdown', function () { self._lastTouch = Date.now(); }, { passive: true });
       this.shadowRoot.addEventListener('touchstart', function () { self._lastTouch = Date.now(); }, { passive: true });
@@ -713,7 +728,8 @@
     _onTick() {
       var now = new Date();
       var key = now.getHours() + ':' + now.getMinutes();
-      if (key !== this._minuteKey) { this._minuteKey = key; this._render(); }
+      if (key !== this._minuteKey) { this._minuteKey = key; this._render(); if (this._ssOn) this._renderSs(); }
+      if (!this._ssOn && this._ssActive() && Date.now() - this._lastTouch > this._ssTimeout() * 1000) this._sleep();
       var to = this._c ? Number(this._c.home_timeout) : 0;
       if (to > 0 && (this._page !== 'home' || this._sheet) && Date.now() - this._lastTouch > to * 1000) {
         this._page = 'home';
@@ -721,6 +737,94 @@
         this._render(true);
       }
       this._fit();
+    }
+
+    /* ---------------------------------------------------------- screensaver */
+    _ssActive() {
+      var ss = this._c && this._c._ss;
+      if (!ss || !this._hass) return false;
+      if (ss.enabled_entity) {
+        var e = this._st(ss.enabled_entity);
+        if (e && e.state === 'off') return false;
+      }
+      var users = ss.users;
+      if (typeof users === 'string') users = users.split(',');
+      if (users && users.length) {
+        var me = ((this._hass.user && this._hass.user.name) || '').toLowerCase();
+        var ok = users.some(function (u) { return String(u).trim().toLowerCase() === me; });
+        if (!ok) return false;
+      }
+      return !(this.preview || this.editMode);
+    }
+    _ssTimeout() {
+      var ss = this._c._ss, v = NaN;
+      if (ss.timeout_entity) v = this._n(ss.timeout_entity);
+      if (isNaN(v)) v = Number(ss.timeout);
+      return isNaN(v) || v < 5 ? 60 : v;
+    }
+    _sleep() {
+      this._ssOn = true;
+      this._sheet = null;
+      this._page = 'home';
+      this._render(true);
+      this._renderSs();
+      var ss = this._c._ss;
+      if (ss.on_start) this._runEntity(ss.on_start);
+    }
+    _wake() {
+      this._lastTouch = Date.now();
+      if (!this._ssOn) return;
+      this._ssOn = false;
+      if (this._ssEl) { this._ssEl.className = ''; this._ssEl.innerHTML = ''; }
+      var ss = this._c && this._c._ss;
+      if (ss && ss.on_wake) this._runEntity(ss.on_wake);
+    }
+    _runEntity(eid) {
+      var dom = eid.split('.')[0];
+      if (dom === 'script') this._call('script', 'turn_on', { entity_id: eid });
+      else if (dom === 'scene') this._call('scene', 'turn_on', { entity_id: eid });
+      else if (dom === 'automation') this._call('automation', 'trigger', { entity_id: eid });
+      else this._press(eid);
+    }
+    _checkWake() {
+      var ss = this._c && this._c._ss;
+      if (!ss || !this._hass) return;
+      var list = ss.wake_entities || (ss.wake_entity ? [ss.wake_entity] : []);
+      if (typeof list === 'string') list = [list];
+      var self = this, sig = [], wakeNow = false;
+      list.forEach(function (eid) {
+        var st = self._st(eid);
+        var k = st ? st.last_changed + st.state : '-';
+        sig.push(k);
+        var prev = self._wakeSig && self._wakeSig[eid];
+        if (prev !== undefined && prev !== k && st && ['off', 'unavailable', 'unknown', 'far', 'idle', 'clear', 'not_home'].indexOf(st.state) < 0) wakeNow = true;
+      });
+      this._wakeSig = {};
+      list.forEach(function (eid, i) { self._wakeSig[eid] = sig[i]; });
+      if (wakeNow) {
+        if (this._ssOn) this._wake();
+        else this._lastTouch = Date.now();
+      }
+    }
+    _renderSs() {
+      if (!this._ssEl || !this._ssOn) return;
+      this._curLang = this._lang();
+      var now = new Date(), self = this;
+      var time = pad(now.getHours()) + ':' + pad(now.getMinutes());
+      var date;
+      try { date = cap(new Intl.DateTimeFormat(this._locale(), { weekday: 'long', day: 'numeric', month: 'long' }).format(now)); } catch (e) { date = now.toDateString(); }
+      var wx = '';
+      var w = this._st(this._c.weather);
+      if (w && this._c._ss.show_weather !== false) {
+        wx = '<div class="ss-w">' + ic(WX_ICON[w.state] || 'mdi:weather-cloudy', '', 'color:' + (WX_COLOR[w.state] || '#94a3b8')) +
+          '<span>' + this._num(parseFloat(w.attributes.temperature), 1) + '°</span><small>' + esc((this.t('w') || {})[w.state] || w.state) + '</small></div>';
+      }
+      /* move the content a little every minute to protect the display */
+      var m = now.getMinutes() % 6, dx = [0, 18, -14, 10, -18, 6][m], dy = [0, -12, 14, 8, -6, -16][m];
+      this._ssEl.className = 'ss' + (this._c.device === 'phone' ? ' ph' : '');
+      morphHTML(this._ssEl, '<div class="ss-in" style="transform:translate(' + dx + 'px,' + dy + 'px)">' +
+        '<div class="ss-t">' + time + '</div><div class="ss-d">' + esc(date) + '</div>' + wx + '</div>');
+      void self;
     }
 
     _subscribeForecast() {
@@ -1823,6 +1927,7 @@
       dark: 'Dark', light: 'Light', auto: 'Auto (sun)',
       c_blue: 'Blue', c_teal: 'Teal', c_green: 'Green', c_amber: 'Amber', c_orange: 'Orange', c_red: 'Red', c_pink: 'Pink', c_purple: 'Purple',
       sec_recuperator: 'Recuperator (ventilation)', sec_air_conditioner: 'Air conditioners', sec_heat_pump: 'Heat pump', sec_solar: 'Solar inverter',
+      sec_screensaver: 'Clock screensaver', timeout: 'Show after (s)', timeout_entity: 'Timeout helper (input_number)', enabled_entity: 'On/off helper (input_boolean)', wake_entities: 'Wake on change of (proximity / presence / event)', users: 'Only for HA users (empty = all)', on_start: 'Run on start (script)', on_wake: 'Run on wake (script)', show_weather: 'Show weather',
       sec_button_1: 'Custom button 1', sec_button_2: 'Custom button 2', sec_modes: 'Mode mapping', sec_hp_modes: 'Mode mapping',
       enabled: 'Connected (show on panel)', name: 'Name (optional)',
       power: 'Power switch', mode: 'Mode (select)', target: 'Target temperature (number)', target_step: 'Target step',
@@ -1852,6 +1957,7 @@
       dark: 'Тёмная', light: 'Светлая', auto: 'Авто (по солнцу)',
       c_blue: 'Синий', c_teal: 'Бирюзовый', c_green: 'Зелёный', c_amber: 'Янтарный', c_orange: 'Оранжевый', c_red: 'Красный', c_pink: 'Розовый', c_purple: 'Фиолетовый',
       sec_recuperator: 'Рекуператор (вентиляция)', sec_air_conditioner: 'Кондиционеры', sec_heat_pump: 'Тепловой насос', sec_solar: 'Инвертор солнечной станции',
+      sec_screensaver: 'Заставка-часы', timeout: 'Показывать через (с)', timeout_entity: 'Хелпер времени (input_number)', enabled_entity: 'Хелпер вкл/выкл (input_boolean)', wake_entities: 'Будить при изменении (приближение / присутствие / событие)', users: 'Только для пользователей HA (пусто = все)', on_start: 'Запустить при начале (скрипт)', on_wake: 'Запустить при пробуждении (скрипт)', show_weather: 'Показывать погоду',
       sec_button_1: 'Своя кнопка 1', sec_button_2: 'Своя кнопка 2', sec_modes: 'Соответствие режимов', sec_hp_modes: 'Соответствие режимов',
       enabled: 'Подключено (показывать на панели)', name: 'Название (необязательно)',
       power: 'Выключатель питания', mode: 'Режим (select)', target: 'Целевая температура (number)', target_step: 'Шаг уставки',
@@ -1881,6 +1987,7 @@
       dark: 'Tumšā', light: 'Gaišā', auto: 'Auto (pēc saules)',
       c_blue: 'Zila', c_teal: 'Tirkīza', c_green: 'Zaļa', c_amber: 'Dzintara', c_orange: 'Oranža', c_red: 'Sarkana', c_pink: 'Rozā', c_purple: 'Violeta',
       sec_recuperator: 'Rekuperators (ventilācija)', sec_air_conditioner: 'Kondicionieri', sec_heat_pump: 'Siltumsūknis', sec_solar: 'Saules invertors',
+      sec_screensaver: 'Pulksteņa ekrānsaudzētājs', timeout: 'Rādīt pēc (s)', timeout_entity: 'Laika palīgs (input_number)', enabled_entity: 'Iesl./izsl. palīgs (input_boolean)', wake_entities: 'Modināt pie izmaiņām (tuvums / klātbūtne / notikums)', users: 'Tikai HA lietotājiem (tukšs = visiem)', on_start: 'Palaist sākumā (skripts)', on_wake: 'Palaist pamostoties (skripts)', show_weather: 'Rādīt laikapstākļus',
       sec_button_1: 'Sava poga 1', sec_button_2: 'Sava poga 2', sec_modes: 'Režīmu atbilstība', sec_hp_modes: 'Režīmu atbilstība',
       enabled: 'Pievienots (rādīt panelī)', name: 'Nosaukums (neobligāti)',
       power: 'Barošanas slēdzis', mode: 'Režīms (select)', target: 'Mērķa temperatūra (number)', target_step: 'Iestatījuma solis',
@@ -2021,7 +2128,7 @@
       if (ac.enabled === undefined) ac.enabled = true;
       d.air_conditioner = ac;
       delete d.air_conditioners;
-      ['recuperator', 'heat_pump', 'solar'].forEach(function (k) {
+      ['recuperator', 'heat_pump', 'solar', 'screensaver'].forEach(function (k) {
         if (!isObj(d[k])) d[k] = { enabled: false };
         else if (d[k].enabled === undefined) d[k].enabled = true;
       });
@@ -2141,6 +2248,13 @@
           G([E('pv_power', SENS), E('load', SENS), E('battery_power', SENS), E('battery_soc', SENS),
             E('grid_power', SENS), E('energy_today', SENS), E('import_today', SENS), E('export_today', SENS),
             B('battery_invert'), B('grid_invert')])
+        ]),
+        sec('screensaver', 'mdi:clock-digital', [
+          G([{ name: 'timeout', selector: { number: { min: 5, max: 3600, step: 5, mode: 'box', unit_of_measurement: 's' } } }, B('show_weather'),
+            E('timeout_entity', ['input_number', 'number']), E('enabled_entity', ['input_boolean', 'switch'])]),
+          E('wake_entities', null, true),
+          { name: 'users', selector: { select: { multiple: true, custom_value: true, options: [] } } },
+          G([E('on_start', ['script', 'scene', 'button', 'input_button']), E('on_wake', ['script', 'scene', 'button', 'input_button'])])
         ]),
         btn('button_1'),
         btn('button_2')
