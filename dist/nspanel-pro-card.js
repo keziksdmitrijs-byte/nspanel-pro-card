@@ -1,5 +1,5 @@
 /*!
- * NSPanel Pro Card v1.0.0
+ * NSPanel Pro Card v1.1.0
  * Full-screen smart-home panel for Home Assistant — Sonoff NSPanel Pro (480×480) or phone.
  * Clock + weather start screen, settings menu (theme / language / accent colour),
  * recuperator, air conditioner(s), heat pump, solar inverter and custom buttons.
@@ -8,7 +8,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.0.0';
+  var VERSION = '1.1.0';
   var CARD = 'nspanel-pro-card';
   var EDITOR = 'nspanel-pro-card-editor';
 
@@ -50,7 +50,7 @@
       exhaust: 'Выброс', recovery: 'Рекуперация', filter: 'Фильтр', days: 'дн.', night_cooling: 'Ночное охл.',
       fans: 'Вентиляторы', airflow: 'Расход',
       m_protection: 'Защита', m_economy: 'Эконом', m_comfort: 'Комфорт', m_boost: 'Интенсив', m_off: 'Выкл',
-      errors: 'Ошибки', standby: 'Ожидание',
+      errors: 'Ошибки', standby: 'Ожидание', mode_lbl: 'Режим', modes: 'Режим работы', functions: 'Функции', data: 'Все данные', ctl: 'Режимы и функции',
       hvac_auto: 'Авто', hvac_cool: 'Холод', hvac_heat: 'Тепло', hvac_dry: 'Осушение', hvac_fan_only: 'Вентиляция',
       hvac_heat_cool: 'Авто', hvac_off: 'Выкл',
       fan: 'Вентилятор', swing: 'Жалюзи', preset: 'Режим', room: 'В комнате',
@@ -90,7 +90,7 @@
       exhaust: 'Izplūde', recovery: 'Rekuperācija', filter: 'Filtrs', days: 'd.', night_cooling: 'Nakts dzes.',
       fans: 'Ventilatori', airflow: 'Plūsma',
       m_protection: 'Aizsardzība', m_economy: 'Ekonomija', m_comfort: 'Komforts', m_boost: 'Intensīvs', m_off: 'Izsl.',
-      errors: 'Kļūdas', standby: 'Gaidīšanas režīms',
+      errors: 'Kļūdas', standby: 'Gaidīšanas režīms', mode_lbl: 'Režīms', modes: 'Darba režīms', functions: 'Funkcijas', data: 'Visi dati', ctl: 'Režīmi un funkcijas',
       hvac_auto: 'Auto', hvac_cool: 'Dzesēt', hvac_heat: 'Sildīt', hvac_dry: 'Žāvēt', hvac_fan_only: 'Ventilēt',
       hvac_heat_cool: 'Auto', hvac_off: 'Izsl.',
       fan: 'Ventilators', swing: 'Žalūzijas', preset: 'Režīms', room: 'Telpā',
@@ -130,7 +130,7 @@
       exhaust: 'Exhaust', recovery: 'Recovery', filter: 'Filter', days: 'd', night_cooling: 'Night cool',
       fans: 'Fans', airflow: 'Airflow',
       m_protection: 'Protection', m_economy: 'Economy', m_comfort: 'Comfort', m_boost: 'Boost', m_off: 'Off',
-      errors: 'Errors', standby: 'Standby',
+      errors: 'Errors', standby: 'Standby', mode_lbl: 'Mode', modes: 'Operating mode', functions: 'Functions', data: 'All data', ctl: 'Modes & functions',
       hvac_auto: 'Auto', hvac_cool: 'Cool', hvac_heat: 'Heat', hvac_dry: 'Dry', hvac_fan_only: 'Fan',
       hvac_heat_cool: 'Auto', hvac_off: 'Off',
       fan: 'Fan', swing: 'Swing', preset: 'Preset', room: 'Room',
@@ -186,6 +186,7 @@
     auto: 'mdi:thermostat-auto', heat_cool: 'mdi:sun-snowflake-variant', cool: 'mdi:snowflake', heat: 'mdi:fire',
     dry: 'mdi:water-percent', fan_only: 'mdi:fan', off: 'mdi:power'
   };
+  var REC_ICON = { protection: 'mdi:shield-home-outline', economy: 'mdi:leaf', comfort: 'mdi:sofa-outline', boost: 'mdi:fan-plus', off: 'mdi:power' };
   var HVAC_COL = { cool: COL.cool, heat: COL.heat, dry: COL.dry, fan_only: COL.fan };
   var AC_SWITCHES = [
     ['quiet_mode', 'mdi:volume-off'], ['xtra_fan', 'mdi:fan-plus'], ['fresh_air', 'mdi:leaf'], ['panel_light', 'mdi:lightbulb-outline']
@@ -428,11 +429,34 @@
     '.st-v small{font-size:11px;color:var(--tx2);font-weight:500;margin-left:2px}',
     '.st.on{background:rgba(var(--acc-rgb),.16)}.st.on .st-h{color:var(--accent)}',
     '.st.warn .st-h,.st.warn .st-v{color:#ef4444}',
-    /* heat pump page compaction (fits 480×480) */
-    '.p-hp>*+*{margin-top:8px}.p-hp .col>*+*{margin-top:8px}',
-    '.p-hp .stp{padding:7px 10px}.p-hp .stp-b{width:40px;height:40px;border-radius:13px}.p-hp .stp-r{margin-top:2px}',
-    '.p-hp .stp-v{font-size:24px}.p-hp .note{margin-top:1px}',
-    '.p-hp .sb{height:50px}.p-hp .st{height:50px}.p-hp .sb.row{height:42px}.p-hp .ring-v{font-size:32px}',
+    /* hero / mode button / KPIs */
+    '.hero{flex:1 1 auto;min-height:0}',
+    '.hero .ring-w{display:flex;align-items:center;justify-content:center}',
+    '.hero .ring-v{font-size:50px;letter-spacing:-1px}.hero .ring-v small{font-size:19px}',
+    '.hero .ring-i{--mdc-icon-size:30px;margin-bottom:4px}.hero .ring-l{font-size:13.5px;margin-top:6px}',
+    '.hero .stp{padding:12px 14px}.hero .stp-l{font-size:14px}',
+    '.hero .stp-v{font-size:46px;letter-spacing:-1px}.hero .stp-v small{font-size:18px}',
+    '.hero .stp-b{width:58px;height:58px;border-radius:18px}',
+    '.hero .stp:not(.sm) .stp-l{justify-content:center}.hero .stp:not(.sm) .note{text-align:center;margin-top:6px}',
+    '.hero .stp:not(.sm) .stp-r{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"v v" "m p";grid-gap:10px;gap:10px;margin-top:4px}',
+    '.hero .stp:not(.sm) .stp-v{grid-area:v;font-size:54px;line-height:1.1}',
+    '.hero .stp:not(.sm) .stp-b{width:auto;height:54px}',
+    '.hero .stp:not(.sm) .stp-b:first-child{grid-area:m}.hero .stp:not(.sm) .stp-b:last-child{grid-area:p}',
+    '.hero .stp.sm{padding:8px 12px}.hero .stp.sm .stp-v{font-size:32px}.hero .stp.sm .stp-v small{font-size:15px}',
+    '.hero .stp.sm .stp-b{width:46px;height:46px;border-radius:15px}.hero .stp.sm .note{margin-top:1px}',
+    '.mbtn{width:100%;height:66px;border-radius:20px;background:var(--sf);display:flex;align-items:center;padding:0 12px 0 10px;box-shadow:var(--sh);text-align:left}',
+    '.mb-ic{width:46px;height:46px;border-radius:15px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}',
+    '.mb-t{flex:1;min-width:0;margin-left:12px}',
+    '.mb-v{font-size:19px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.mb-s{font-size:12.5px;color:var(--tx2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.mb-more{width:40px;height:40px;border-radius:13px;background:var(--sf3);display:flex;align-items:center;justify-content:center;color:var(--tx2);flex:none;margin-left:8px}',
+    '.kpis{display:grid;grid-gap:8px;gap:8px}',
+    '.kpi{background:var(--sf);border-radius:20px;padding:10px 12px;box-shadow:var(--sh);min-width:0;height:86px;display:flex;flex-direction:column;justify-content:space-between}',
+    '.kpi-l{display:flex;align-items:center;font-size:12px;color:var(--tx2);white-space:nowrap;overflow:hidden}',
+    '.kpi-l ha-icon{--mdc-icon-size:16px;margin-right:5px}',
+    '.kpi-v{font-size:26px;font-weight:600;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.5px}',
+    '.kpi-v small{font-size:14px;color:var(--tx2);font-weight:500;margin-left:3px;letter-spacing:0}',
+    '.kpi.warn .kpi-l,.kpi.warn .kpi-v{color:#ef4444}',
     /* menu */
     '.sec{background:var(--sf);border-radius:20px;padding:11px 12px 12px;box-shadow:var(--sh)}',
     '.sec-t{display:flex;align-items:center;font-size:13.5px;font-weight:600;color:var(--tx2);margin-bottom:9px}',
@@ -457,7 +481,7 @@
     '.fcr-t{margin-left:auto;font-size:16px;font-weight:600}',
     '.fcr-t span{color:var(--tx3);font-weight:500;margin-left:8px}',
     /* solar flow */
-    '.flow{position:relative;width:456px;height:300px;margin-left:auto;margin-right:auto;background:var(--sf);border-radius:24px;box-shadow:var(--sh)}',
+    '.flow{position:relative;width:456px;height:280px;margin-left:auto;margin-right:auto;background:var(--sf);border-radius:24px;box-shadow:var(--sh)}',
     '.flow svg{position:absolute;top:0;left:0}',
     '.fn{position:absolute;width:88px;height:88px;border-radius:50%;background:var(--sf2);border:3px solid var(--c);',
     'display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}',
@@ -479,6 +503,9 @@
     '.dev-phone .col{margin-left:0;margin-top:10px}',
     '.dev-phone .col .stp{flex:none}',
     '.dev-phone .stats{grid-template-columns:repeat(2,1fr)}',
+    '.dev-phone .kpis{grid-template-columns:repeat(2,1fr)}',
+    '.dev-phone .hero{flex:none}',
+    '.dev-phone .sh-g.c3,.dev-phone .sh-g.c4{grid-template-columns:repeat(2,1fr)}',
     '.dev-phone .flow{zoom:var(--fz,1)}',
     '.dev-phone .sw{grid-template-columns:repeat(4,1fr);grid-row-gap:10px;row-gap:10px}',
     '.dev-phone .seg.n5,.dev-phone .seg.n6{grid-template-columns:repeat(3,1fr)}',
@@ -488,7 +515,17 @@
     '.sh-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}',
     '.sh-t{font-size:17px;font-weight:600;padding-left:4px}',
     '.sh-g{display:grid;grid-template-columns:repeat(3,1fr);grid-gap:8px;gap:8px}',
-    '.sh-o{height:50px;border-radius:14px;background:var(--sf3);font-size:13.5px;text-align:center;padding:0 6px}',
+    '.sh-g.c2{grid-template-columns:repeat(2,1fr)}.sh-g.c4{grid-template-columns:repeat(4,1fr)}',
+    '.sh-s+.sh-s{margin-top:14px}',
+    '.sh-st{display:flex;align-items:center;font-size:13px;font-weight:600;color:var(--tx2);margin:0 0 8px 2px}',
+    '.sh-st ha-icon{--mdc-icon-size:17px;margin-right:6px}',
+    '.sh-o{height:50px;border-radius:14px;background:var(--sf3);font-size:13.5px;text-align:center;padding:0 8px;display:flex;align-items:center;justify-content:center;min-width:0}',
+    '.sh-o ha-icon{--mdc-icon-size:20px;margin-right:7px}',
+    '.sh-o span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.sh-i{display:flex;align-items:center;background:var(--sf2);border-radius:12px;padding:9px 10px;font-size:13px;min-width:0}',
+    '.sh-i ha-icon{--mdc-icon-size:16px;color:var(--tx2);margin-right:6px}',
+    '.sh-il{color:var(--tx2);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.sh-iv{font-weight:600;margin-left:6px;white-space:nowrap}.sh-iv small{color:var(--tx2);font-weight:500}',
     '.sh-o.on{background:var(--accent);color:#fff}',
     '.toast{position:absolute;left:12px;right:12px;bottom:12px;background:#ef4444;color:#fff;border-radius:14px;padding:10px 14px;font-size:13px;z-index:20;animation:fo .2s}',
     '.na{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--tx2);text-align:center}',
@@ -897,13 +934,44 @@
     }
 
     _sheetHtml() {
-      var s = this._sheet;
+      var s = this._sheet, fn = s && this['_sh_' + s.kind];
+      var body = fn ? fn.call(this) : null;
+      if (!body) return '';
       return '<div class="ov" data-a="sheet_close"><div class="sheet" data-a="noop">' +
-        '<div class="sh-h"><div class="sh-t">' + esc(s.title) + '</div>' +
+        '<div class="sh-h"><div class="sh-t">' + esc(body.title) + '</div>' +
         '<button class="ib" data-a="sheet_close">' + ic('mdi:close') + '</button></div>' +
-        '<div class="sh-g">' + s.options.map(function (o) {
-          return '<button class="sh-o' + (o.v === s.cur ? ' on' : '') + '" data-a="sheet_pick" data-v="' + esc(o.v) + '">' + esc(o.l) + '</button>';
-        }).join('') + '</div></div></div>';
+        body.sections.filter(Boolean).join('') + '</div></div>';
+    }
+    _shSec(title, icon, items, cols) {
+      if (!items.length) return '';
+      return '<div class="sh-s"><div class="sh-st">' + (icon ? ic(icon) : '') + esc(title) + '</div>' +
+        '<div class="sh-g c' + (cols || 3) + '">' + items.join('') + '</div></div>';
+    }
+    _shOpt(icon, label, on, a, data, dis) {
+      var attrs = '';
+      Object.keys(data || {}).forEach(function (k) { attrs += ' data-' + k + '="' + esc(data[k]) + '"'; });
+      return '<button class="sh-o' + (on ? ' on' : '') + (dis ? ' dis' : '') + '" data-a="' + a + '"' + attrs + '>' +
+        (icon ? ic(icon) : '') + '<span>' + esc(label) + '</span></button>';
+    }
+    _shInfo(icon, label, value, unit) {
+      return '<div class="sh-i">' + ic(icon) + '<span class="sh-il">' + esc(label) + '</span><span class="sh-iv">' + value +
+        (unit ? '<small> ' + esc(unit) + '</small>' : '') + '</span></div>';
+    }
+    _mbtn(kind, icon, value, sub, color, dis) {
+      return '<button class="mbtn' + (dis ? ' dis' : '') + '" data-a="sheet" data-v="' + kind + '">' +
+        '<div class="mb-ic"' + (color ? ' style="background:' + color + '"' : '') + '>' + ic(icon) + '</div>' +
+        '<div class="mb-t"><div class="mb-v">' + esc(value) + '</div>' + (sub ? '<div class="mb-s">' + esc(sub) + '</div>' : '') + '</div>' +
+        '<div class="mb-more">' + ic('mdi:chevron-up') + '</div></button>';
+    }
+    _kpi(icon, label, value, unit, opt) {
+      opt = opt || {};
+      return '<div class="kpi' + (opt.warn ? ' warn' : '') + '"><div class="kpi-l">' + ic(icon) + '<span>' + esc(label) + '</span></div>' +
+        '<div class="kpi-v">' + value + (unit ? '<small>' + esc(unit) + '</small>' : '') + '</div></div>';
+    }
+    _kpis(list) {
+      if (!list.length) return '';
+      list = list.slice(0, 4);
+      return '<div class="kpis n' + list.length + '">' + list.join('') + '</div>';
     }
 
     /* ================================================================ HOME */
@@ -1058,7 +1126,7 @@
         isNaN(t) ? '' : this._num(t, 1) + '<small>°C</small>', i.on, { p: 'rec' });
     }
     _p_rec() {
-      var r = this._c._rec, self = this;
+      var r = this._c._rec;
       if (!r) return this._p_home();
       var i = this._recInfo();
       var status = this._st(r.status);
@@ -1074,48 +1142,63 @@
       var spd = i.on && af > 0 ? (3.2 - 2.6 * clamp(af / 100, 0, 1)).toFixed(2) + 's' : '0s';
       var center = ic('mdi:fan', 'ring-i' + (i.on && af > 0 ? ' spin' : ''), '--spd:' + spd) +
         '<div class="ring-v">' + this._num(af, 0) + '<small>%</small></div>' +
-        '<div class="ring-l">' + esc(i.on ? (i.mode ? this.t('m_' + i.mode) : this.t('airflow')) : this.t('off')) + '</div>';
+        '<div class="ring-l">' + esc(this.t('airflow')) + '</div>';
       var stp = '';
-      var ts = this._st(r.target);
       if (r.target) {
+        var ts = this._st(r.target);
         var tv = this._pv(r.target, this._n(r.target));
         var indoor = this._n(r.indoor || r.extract);
         stp = this._stepper(this.t('target'), 'mdi:thermometer', this._num(tv, 1) + '<small>°C</small>', 'rec_t', 't',
           { disabled: !this._ok(ts), note: isNaN(indoor) ? '' : this.t('indoor') + ': ' + this._num(indoor, 1) + '°C' });
       }
-      var ring = this._ring(176, af / 100, i.on ? 'var(--accent)' : 'var(--tx3)', center, { solo: !stp });
+      var ring = this._ring(stp ? 196 : 232, af / 100, i.on ? 'var(--accent)' : 'var(--tx3)', center, { solo: !stp, stroke: 14 });
 
-      var micons = { protection: 'mdi:shield-home-outline', economy: 'mdi:leaf', comfort: 'mdi:sofa-outline', boost: 'mdi:fan-plus' };
-      var modes = ['protection', 'economy', 'comfort', 'boost'].filter(function (m) {
+      var mb = '';
+      if (this._recModes().length || r.night_cooling) {
+        var mtxt = i.on ? (i.mode ? this.t('m_' + i.mode) : this.t('on')) : this.t('off');
+        if (i.mode === 'boost' && i.boostLeft > 0) mtxt += ' · ' + Math.ceil(i.boostLeft / 60) + ' min';
+        var subs = [this.t('mode_lbl')];
+        if (r.night_cooling) subs.push(this.t('night_cooling') + ': ' + (this._isOn(r.night_cooling) ? this.t('on') : this.t('off')));
+        mb = this._mbtn('rec', REC_ICON[i.mode] || 'mdi:fan', mtxt, subs.join(' · '), i.on ? '' : 'var(--sf3)');
+      }
+      var self = this;
+      var kp = this._kpis(this._recStats().map(function (x) { return self._kpi(x[1], x[2], self._num(self._n(x[0]), x[3]), x[4], x[5]); }));
+      return hdr + '<div class="ctl hero">' + ring + (stp ? '<div class="col">' + stp + '</div>' : '') + '</div>' + mb + kp;
+    }
+    _recModes() {
+      var r = this._c._rec, self = this;
+      return ['protection', 'economy', 'comfort', 'boost'].filter(function (m) {
         return m === 'boost' ? !!(r.boost_button || self._recOption('boost')) : !!self._recOption(m);
       });
-      var mhtml = this._seg(modes.map(function (m) {
+    }
+    _recStats() {
+      var r = this._c._rec, out = [];
+      var fd = this._n(r.filter_days);
+      [[r.outdoor, 'mdi:home-thermometer-outline', this.t('outdoor'), 1, '°C'],
+        [r.supply, 'mdi:arrow-collapse-right', this.t('supply'), 1, '°C'],
+        [r.efficiency, 'mdi:recycle', this.t('recovery'), 0, '%'],
+        [r.filter_days, 'mdi:air-filter', this.t('filter'), 0, this.t('days'), { warn: fd >= 0 && fd < 10 }],
+        [r.extract, 'mdi:arrow-expand-left', this.t('extract'), 1, '°C'],
+        [r.exhaust, 'mdi:export', this.t('exhaust'), 1, '°C'],
+        [r.fan_rpm || r.fan_supply_rpm, 'mdi:fan', this.t('fans'), 0, this.t('u_rpm')]
+      ].forEach(function (x) { if (x[0]) out.push(x); });
+      return out;
+    }
+    _sh_rec() {
+      var r = this._c._rec, i = this._recInfo(), self = this;
+      if (!r) return null;
+      var modes = this._recModes().map(function (m) {
         var lbl = self.t('m_' + m);
-        if (m === 'boost' && i.boostLeft > 0) lbl = Math.ceil(i.boostLeft / 60) + ' min';
-        return self._sb(micons[m], lbl, i.on && i.mode === m, 'rec_mode', { v: m });
-      }));
-
-      var list = [];
-      var add = function (eid, icon, label, dec, unit, opt) {
-        if (!eid) return;
-        list.push(self._stat(icon, label, self._num(self._n(eid), dec), unit, opt));
+        if (m === 'boost' && i.boostLeft > 0) lbl += ' · ' + Math.ceil(i.boostLeft / 60) + ' min';
+        return self._shOpt(REC_ICON[m], lbl, i.on && i.mode === m, 'rec_mode', { v: m });
+      });
+      var fn = r.night_cooling ? [this._shOpt('mdi:weather-night', this.t('night_cooling'), this._isOn(r.night_cooling), 'toggle', { e: r.night_cooling })] : [];
+      var data = this._recStats().map(function (x) { return self._shInfo(x[1], x[2], self._num(self._n(x[0]), x[3]), x[4]); });
+      return {
+        title: this.t('ctl'),
+        sections: [this._shSec(this.t('modes'), 'mdi:tune-variant', modes, 2), this._shSec(this.t('functions'), 'mdi:toggle-switch-outline', fn, 2),
+          this._shSec(this.t('data'), 'mdi:chart-box-outline', data, 2)]
       };
-      add(r.outdoor, 'mdi:home-thermometer-outline', this.t('outdoor'), 1, '°C');
-      add(r.supply, 'mdi:arrow-collapse-right', this.t('supply'), 1, '°C');
-      add(r.extract, 'mdi:arrow-expand-left', this.t('extract'), 1, '°C');
-      add(r.exhaust, 'mdi:export', this.t('exhaust'), 1, '°C');
-      add(r.efficiency, 'mdi:recycle', this.t('recovery'), 0, '%');
-      add(r.fan_rpm || r.fan_supply_rpm, 'mdi:fan', this.t('fans'), 0, this.t('u_rpm'));
-      if (r.filter_days) {
-        var fd = this._n(r.filter_days);
-        add(r.filter_days, 'mdi:air-filter', this.t('filter'), 0, this.t('days'), { warn: fd >= 0 && fd < 10 });
-      }
-      if (r.night_cooling) {
-        var nc = this._isOn(r.night_cooling);
-        list.push(this._stat('mdi:weather-night', this.t('night_cooling'), nc ? this.t('on') : this.t('off'), '', { a: 'toggle', e: r.night_cooling, on: nc }));
-      }
-
-      return hdr + '<div class="ctl">' + ring + (stp ? '<div class="col">' + stp + '</div>' : '') + '</div>' + mhtml + this._stats(list);
     }
 
     /* =============================================================== AC */
@@ -1172,36 +1255,53 @@
       var center = ic(HVAC_ICON[s.state] || 'mdi:air-conditioner', 'ring-i' + (st.on && s.state === 'fan_only' ? ' spin' : ''), '--spd:2s') +
         '<div class="ring-v">' + this._num(cur, 0) + '<small>°C</small></div>' +
         '<div class="ring-l">' + esc(this.t('room')) + '</div>';
-      var ring = this._ring(176, (tgt - min) / (max - min), mcol, center);
+      var ring = this._ring(212, (tgt - min) / (max - min), mcol, center, { stroke: 14 });
       var stp = this._stepper(this.t('target'), 'mdi:thermometer', this._num(tgt, (Number(at.target_temp_step) || 1) < 1 ? 1 : 0) + '<small>°C</small>',
         'ac_t', 't', { disabled: !st.ok });
 
-      var modes = (at.hvac_modes || []).filter(function (m) { return m !== 'off'; });
-      var mhtml = this._seg(modes.map(function (m) {
-        return self._sb(HVAC_ICON[m] || 'mdi:help', self.t('hvac_' + m), st.on && s.state === m, 'ac_mode', { v: m }, st.ok ? '' : 'dis');
-      }));
+      var subs = [];
+      if (at.fan_mode) subs.push(this.t('fan') + ': ' + this._acOptLabel('fan', at.fan_mode));
+      if (at.swing_mode) subs.push(this.t('swing') + ': ' + this._acOptLabel('swing', at.swing_mode));
+      if (at.preset_mode && at.preset_mode !== 'none') subs.push(this._acOptLabel('preset', at.preset_mode));
+      var mb = this._mbtn('ac', st.on ? (HVAC_ICON[s.state] || 'mdi:air-conditioner') : 'mdi:power',
+        st.on ? this.t('hvac_' + s.state) : this.t('off'), subs.join(' · ') || this.t('mode_lbl'),
+        st.on ? (HVAC_COL[s.state] || '') : 'var(--sf3)', !st.ok);
 
-      var opts = [];
-      if (at.fan_modes && at.fan_modes.length) opts.push(['fan', 'mdi:fan', this._acOptLabel('fan', at.fan_mode)]);
-      if (at.swing_modes && at.swing_modes.length) opts.push(['swing', 'mdi:arrow-oscillating', this._acOptLabel('swing', at.swing_mode)]);
-      if (at.preset_modes && at.preset_modes.length) opts.push(['preset', 'mdi:star-four-points-outline', this._acOptLabel('preset', at.preset_mode)]);
-      var ohtml = this._seg(opts.map(function (o) {
-        return '<button class="opt' + (st.ok ? '' : ' dis') + '" data-a="ac_pick" data-v="' + o[0] + '">' + ic(o[1]) +
-          '<div class="opt-t"><div class="opt-l">' + esc(self.t(o[0])) + '</div><div class="opt-v">' + esc(o[2]) + '</div></div></button>';
-      }));
-
-      var obj = a.entity.split('.')[1];
-      var sws = (a.switches || AC_SWITCHES.map(function (x) { return 'switch.' + obj + '_' + x[0]; }))
+      var kp = [];
+      var hum = Number(at.current_humidity);
+      if (!isNaN(hum)) kp.push(this._kpi('mdi:water-percent', this.t('humidity'), this._num(hum, 0), '%'));
+      return hdr + '<div class="ctl hero">' + ring + '<div class="col">' + stp + '</div></div>' + mb + this._kpis(kp);
+    }
+    _acSwitches(a) {
+      var self = this, obj = a.entity.split('.')[1];
+      return (a.switches || AC_SWITCHES.map(function (x) { return 'switch.' + obj + '_' + x[0]; }))
         .filter(function (e) { return !!self._st(e); });
-      var shtml = this._seg(sws.map(function (e) {
+    }
+    _sh_ac() {
+      var self = this, a = this._c._acs[this._acIdx];
+      if (!a) return null;
+      var st = this._acState(a), s = st.s;
+      if (!s) return null;
+      var at = s.attributes;
+      var modes = (at.hvac_modes || []).filter(function (m) { return m !== 'off'; }).map(function (m) {
+        return self._shOpt(HVAC_ICON[m] || 'mdi:help', self.t('hvac_' + m), st.on && s.state === m, 'ac_mode', { v: m }, !st.ok);
+      });
+      var group = function (kind, icon) {
+        return self._shSec(self.t(kind), icon, (at[kind + '_modes'] || []).map(function (o) {
+          return self._shOpt(null, self._acOptLabel(kind, o), at[kind + '_mode'] === o, 'ac_set', { k: kind, v: o }, !st.ok);
+        }), 3);
+      };
+      var sws = this._acSwitches(a).map(function (e) {
         var key = null, icon = 'mdi:toggle-switch-outline';
         AC_SWITCHES.forEach(function (x) { if (e.slice(-x[0].length) === x[0]) { key = x[0]; icon = x[1]; } });
         var es = self._st(e);
-        var lbl = key ? self.t('x_' + key) : (es.attributes.friendly_name || e);
-        return self._sb(icon, lbl, es.state === 'on', 'toggle', { e: e }, 'vert soft' + (self._ok(es) ? '' : ' dis'));
-      }));
-
-      return hdr + '<div class="ctl">' + ring + '<div class="col">' + stp + '</div></div>' + mhtml + ohtml + shtml;
+        return self._shOpt(icon, key ? self.t('x_' + key) : (es.attributes.friendly_name || e), es.state === 'on', 'toggle', { e: e }, !self._ok(es));
+      });
+      return {
+        title: this._acName(a, this._acIdx),
+        sections: [this._shSec(this.t('modes'), 'mdi:tune-variant', modes, 3), group('fan', 'mdi:fan'), group('swing', 'mdi:arrow-oscillating'),
+          group('preset', 'mdi:star-four-points-outline'), this._shSec(this.t('functions'), 'mdi:toggle-switch-outline', sws, 2)]
+      };
     }
     _acOptLabel(kind, v) {
       if (v === undefined || v === null) return '—';
@@ -1268,9 +1368,8 @@
       var c = this._c._hp, self = this;
       if (!c) return this._p_home();
       var i = this._hpInfo();
-      var hdr = this._hdr(c.name || this.t('heatpump'), i.status ? this.t('st_' + i.status) : i.raw, {
-        power: c.power ? { on: i.on, a: 'hp_power' } : null
-      });
+      var stTxt = i.status ? this.t('st_' + i.status) : i.raw;
+      var hdr = this._hdr(c.name || this.t('heatpump'), stTxt, { power: c.power ? { on: i.on, a: 'hp_power' } : null });
       var scol = { heat: COL.heat, cool: COL.cool, dhw: COL.dhw, idle: 'var(--tx3)', off: 'var(--tx3)' }[i.status] || 'var(--accent)';
       var sicon = { heat: 'mdi:fire', cool: 'mdi:snowflake', dhw: 'mdi:water-boiler', idle: 'mdi:pause-circle-outline', off: 'mdi:power' }[i.status] || 'mdi:heat-pump-outline';
       var wout = this._n(c.water_out);
@@ -1289,32 +1388,49 @@
         var dt = this._pv(c.dhw_target, this._targetVal(c.dhw_target));
         steppers.push(this._stepper(this.t('dhw'), 'mdi:water-boiler', this._num(dt, 0) + '<small>°C</small>', 'hp_t', 'd', { small: true }));
       }
-      var ring = this._ring(136, (wout - 10) / 50, scol, center, { stroke: 11, solo: !steppers.length });
+      var ring = this._ring(steppers.length ? 184 : 224, (wout - 10) / 50, scol, center, { stroke: 14, solo: !steppers.length });
 
-      var mhtml = this._seg(i.modes.map(function (m) {
-        return self._sb(m.icon, self.t('hp_' + m.key), i.mode === m.key, 'hp_mode', { v: m.key }, i.on ? '' : 'soft');
-      }));
-
-      var pkw = toKw(this._st(c.electric_power)), cop = this._n(c.cop);
-      var list = [];
-      var out = this._outdoor();
-      if (!isNaN(out)) list.push(this._stat('mdi:home-thermometer-outline', this.t('outdoor'), this._num(out, 1), '°C'));
-      if (c.water_in) list.push(this._stat('mdi:thermometer-chevron-down', this.t('ret'), this._num(this._n(c.water_in), 1), '°C'));
-      if (c.dhw_tank) list.push(this._stat('mdi:water-thermometer', this.t('tank'), this._num(this._n(c.dhw_tank), 1), '°C'));
-      if (c.compressor) list.push(this._stat('mdi:sine-wave', this.t('compressor'), this._num(i.hz, 0), this.t('u_hz')));
-      if (c.electric_power) list.push(this._stat('mdi:flash', this.t('power'), this._num(pkw, 2), this.t('u_kw')));
-      if (c.electric_power && c.cop) list.push(this._stat('mdi:fire', this.t('heat_out'), this._num(pkw * cop, 2), this.t('u_kw')));
-      if (c.cop) list.push(this._stat('mdi:gauge', this.t('cop'), this._num(cop, 1), ''));
-      if (c.energy_today) list.push(this._stat('mdi:counter', this.t('today'), this._num(toKwh(this._st(c.energy_today)), 1), this.t('u_kwh')));
-
-      var tg = [[c.quiet, 'mdi:volume-off', 'quiet'], [c.weather_comp, 'mdi:chart-bell-curve-cumulative', 'weather_comp'], [c.dhw_boost, 'mdi:lightning-bolt', 'dhw_boost']]
-        .filter(function (x) { return !!x[0]; });
-      var thtml = this._seg(tg.map(function (x) {
-        return self._sb(x[1], self.t(x[2]), self._isOn(x[0]), 'toggle', { e: x[0] }, 'row soft');
-      }));
-
-      return hdr + '<div class="ctl">' + ring + (steppers.length ? '<div class="col">' + steppers.join('') + '</div>' : '') + '</div>' +
-        mhtml + this._stats(list) + thtml;
+      var mb = '';
+      if (i.modes.length || c.quiet || c.weather_comp || c.dhw_boost) {
+        var cm = null;
+        i.modes.forEach(function (m) { if (m.key === i.mode) cm = m; });
+        var subs = [this.t('mode_lbl')];
+        [[c.quiet, 'quiet'], [c.weather_comp, 'weather_comp'], [c.dhw_boost, 'dhw_boost']].forEach(function (x) {
+          if (x[0] && self._isOn(x[0])) subs.push(self.t(x[1]));
+        });
+        mb = this._mbtn('hp', cm ? cm.icon : 'mdi:heat-pump-outline', !i.on ? this.t('off') : cm ? this.t('hp_' + cm.key) : stTxt,
+          subs.join(' · '), i.on ? '' : 'var(--sf3)');
+      }
+      var kp = this._kpis(this._hpStats().map(function (x) { return self._kpi(x[0], x[1], x[2], x[3]); }));
+      return hdr + '<div class="ctl hero">' + ring + (steppers.length ? '<div class="col">' + steppers.join('') + '</div>' : '') + '</div>' + mb + kp;
+    }
+    _hpStats() {
+      var c = this._c._hp, i = this._hpInfo(), out = [];
+      var pkw = toKw(this._st(c.electric_power)), cop = this._n(c.cop), o = this._outdoor();
+      if (!isNaN(o)) out.push(['mdi:home-thermometer-outline', this.t('outdoor'), this._num(o, 1), '°C']);
+      if (c.dhw_tank) out.push(['mdi:water-thermometer', this.t('tank'), this._num(this._n(c.dhw_tank), 1), '°C']);
+      if (c.electric_power) out.push(['mdi:flash', this.t('power'), this._num(pkw, pkw < 10 ? 1 : 0), this.t('u_kw')]);
+      if (c.cop) out.push(['mdi:gauge', this.t('cop'), this._num(cop, 1), '']);
+      if (c.water_in) out.push(['mdi:thermometer-chevron-down', this.t('ret'), this._num(this._n(c.water_in), 1), '°C']);
+      if (c.compressor) out.push(['mdi:sine-wave', this.t('compressor'), this._num(i.hz, 0), this.t('u_hz')]);
+      if (c.electric_power && c.cop) out.push(['mdi:fire', this.t('heat_out'), this._num(pkw * cop, 1), this.t('u_kw')]);
+      if (c.energy_today) out.push(['mdi:counter', this.t('today'), this._num(toKwh(this._st(c.energy_today)), 1), this.t('u_kwh')]);
+      return out;
+    }
+    _sh_hp() {
+      var c = this._c._hp, self = this;
+      if (!c) return null;
+      var i = this._hpInfo();
+      var modes = i.modes.map(function (m) { return self._shOpt(m.icon, self.t('hp_' + m.key), i.on && i.mode === m.key, 'hp_mode', { v: m.key }); });
+      var fn = [[c.quiet, 'mdi:volume-off', 'quiet'], [c.weather_comp, 'mdi:chart-bell-curve-cumulative', 'weather_comp'], [c.dhw_boost, 'mdi:lightning-bolt', 'dhw_boost']]
+        .filter(function (x) { return !!x[0]; })
+        .map(function (x) { return self._shOpt(x[1], self.t(x[2]), self._isOn(x[0]), 'toggle', { e: x[0] }); });
+      var data = this._hpStats().map(function (x) { return self._shInfo(x[0], x[1], x[2], x[3]); });
+      return {
+        title: this.t('ctl'),
+        sections: [this._shSec(this.t('modes'), 'mdi:tune-variant', modes, 2), this._shSec(this.t('functions'), 'mdi:toggle-switch-outline', fn, fn.length === 3 ? 3 : 2),
+          this._shSec(this.t('data'), 'mdi:chart-box-outline', data, 2)]
+      };
     }
 
     /* ============================================================= SOLAR */
@@ -1350,12 +1466,12 @@
       if (sun && sun.attributes.elevation !== undefined) sub.push('☀ ' + this._num(Number(sun.attributes.elevation), 0) + '°');
       var hdr = this._hdr(c.name || this.t('solar'), sub.join('  ·  '));
 
-      var W = 456, H = 300, cx = W / 2, cy = H / 2, R = 44, IR = 25;
+      var W = 456, H = 280, cx = W / 2, cy = H / 2, R = 44, IR = 25;
       var nodes = {};
-      if (c.pv_power) nodes.pv = { x: 76, y: 70, c: COL.sun, icon: 'mdi:solar-power-variant', l: this.t('pv'), p: v.pv };
-      if (c.battery_power || c.battery_soc) nodes.bat = { x: 76, y: 230, c: COL.bat, icon: this._batIcon(v.soc, v.bat), l: this.t('battery'), p: v.bat };
-      if (c.grid_power) nodes.grid = { x: 380, y: 70, c: COL.grid, icon: 'mdi:transmission-tower', l: this.t('grid'), p: v.grid };
-      if (c.load) nodes.home = { x: 380, y: 230, c: COL.home, icon: 'mdi:home-lightning-bolt-outline', l: this.t('home'), p: v.load };
+      if (c.pv_power) nodes.pv = { x: 76, y: 64, c: COL.sun, icon: 'mdi:solar-power-variant', l: this.t('pv'), p: v.pv };
+      if (c.battery_power || c.battery_soc) nodes.bat = { x: 76, y: 216, c: COL.bat, icon: this._batIcon(v.soc, v.bat), l: this.t('battery'), p: v.bat };
+      if (c.grid_power) nodes.grid = { x: 380, y: 64, c: COL.grid, icon: 'mdi:transmission-tower', l: this.t('grid'), p: v.grid };
+      if (c.load) nodes.home = { x: 380, y: 216, c: COL.home, icon: 'mdi:home-lightning-bolt-outline', l: this.t('home'), p: v.load };
       var flows = [
         ['pv', v.pv > 10, true, v.pv],
         ['bat', Math.abs(v.bat) > 10, v.bat < 0, Math.abs(v.bat)],
@@ -1408,14 +1524,14 @@
 
       var ep = toKwh(this._st(c.energy_today)), ei = toKwh(this._st(c.import_today)), ee = toKwh(this._st(c.export_today));
       var list = [];
-      if (c.energy_today) list.push(this._stat('mdi:solar-power', this.t('produced'), this._num(ep, 1), this.t('u_kwh')));
-      if (c.import_today) list.push(this._stat('mdi:transmission-tower-import', this.t('import'), this._num(ei, 1), this.t('u_kwh')));
-      if (c.export_today) list.push(this._stat('mdi:transmission-tower-export', this.t('export'), this._num(ee, 1), this.t('u_kwh')));
+      if (c.energy_today) list.push(this._kpi('mdi:solar-power', this.t('produced'), this._num(ep, 1), this.t('u_kwh')));
+      if (c.import_today) list.push(this._kpi('mdi:transmission-tower-import', this.t('import'), this._num(ei, 1), this.t('u_kwh')));
+      if (c.export_today) list.push(this._kpi('mdi:transmission-tower-export', this.t('export'), this._num(ee, 1), this.t('u_kwh')));
       if (c.energy_today && c.export_today) {
         var selfUse = ep > 0 ? clamp((ep - (isNaN(ee) ? 0 : ee)) / ep * 100, 0, 100) : NaN;
-        list.push(this._stat('mdi:home-percent-outline', this.t('self_use'), this._num(selfUse, 0), '%'));
+        list.push(this._kpi('mdi:home-percent-outline', this.t('self_use'), this._num(selfUse, 0), '%'));
       }
-      return hdr + html + this._stats(list);
+      return hdr + html + this._kpis(list);
     }
     _batIcon(soc, p) {
       if (isNaN(soc)) return 'mdi:battery';
@@ -1489,15 +1605,15 @@
         case 'set': this._setSetting(d('s'), d('v')); return;
         case 'toggle': this._call('homeassistant', 'toggle', { entity_id: d('e') }); return;
         case 'cbtn': { var b = c._buttons[Number(d('i'))]; if (b) this._runButton(b); return; }
+        case 'sheet': this._sheet = { kind: d('v') }; this._render(); return;
         case 'sheet_close': this._sheet = null; this._render(); return;
-        case 'sheet_pick': {
-          var sh = this._sheet;
-          this._sheet = null;
-          if (sh && sh.pick) sh.pick(d('v'));
-          this._render();
+        case 'ac_set': {
+          var acx = c._acs[this._acIdx], kd = d('k');
+          var data = { entity_id: acx.entity };
+          data[kd + '_mode'] = d('v');
+          this._call('climate', 'set_' + kd + '_mode', data);
           return;
         }
-
         /* recuperator */
         case 'rec_power': this._call('homeassistant', 'toggle', { entity_id: c._rec.power }); return;
         case 'rec_mode': {
@@ -1546,25 +1662,6 @@
           });
           return;
         }
-        case 'ac_pick': {
-          var ac4 = c._acs[this._acIdx], s4 = this._st(ac4.entity);
-          if (!s4) return;
-          var kind = d('v');
-          var list = s4.attributes[kind + '_modes'] || [];
-          this._sheet = {
-            title: this.t(kind),
-            cur: s4.attributes[kind + '_mode'],
-            options: list.map(function (o) { return { v: o, l: self._acOptLabel(kind, o) }; }),
-            pick: function (v) {
-              var data = { entity_id: ac4.entity };
-              data[kind + '_mode'] = v;
-              self._call('climate', 'set_' + kind + '_mode', data);
-            }
-          };
-          this._render();
-          return;
-        }
-
         /* heat pump */
         case 'hp_power': this._call('homeassistant', 'toggle', { entity_id: c._hp.power }); return;
         case 'hp_mode': {
