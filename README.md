@@ -19,10 +19,10 @@ recuperator (MVHR ventilation), air conditioners, a heat pump, a solar inverter,
 - **Custom buttons** — extra tiles that open another dashboard/view, a URL, an entity's info dialog, or toggle an entity.
 - **Two layouts** — `nspanel` (fixed 480×480 layout scaled to the screen) or `phone` (portrait, scrollable).
 - **Menu** — dark / light / auto theme, language (Русский, Latviešu, English) and 8 accent colours, changeable right on the panel.
-- **Clean device pages** — the main value (big ring) and the set point (big − / + buttons) take most of the screen; up to four key readings are shown in large tiles. All mode choices, extra functions and the full list of readings are collected in **one pop-up menu** opened by the mode button.
-- **Recuperator** — power, modes (protection / economy / comfort / boost), target temperature, airflow ring, temperatures, recovery efficiency, filter, night cooling.
-- **Air conditioners** — any number of `climate` entities with a unit switcher; HVAC mode, fan, swing, preset and extra switches (Gree quiet / xtra fan / fresh air / display are detected automatically) in the pop-up menu.
-- **Heat pump** — power, modes (heating / cooling / hot water / auto), heating and DHW set points, flow / return / tank temperatures, compressor, power, COP, energy, quiet / weather-compensation / DHW-boost switches.
+- **Clean device pages** — the main value is shown in a big ring, set points have large − / + buttons, and choices live in pop-up menus instead of rows of buttons.
+- **Recuperator** — the airflow is the main element: a big ring with % and m³/h and optional − / + to change the fan level. The target temperature is a compact line below. Two buttons open the **operating mode** menu (protection / economy / comfort / boost, night cooling) and the **data** menu (all temperatures, recovery, fans, filter, status, errors).
+- **Air conditioners** — any number of `climate` entities with a unit switcher; four separate buttons open pop-up menus for **operating mode** (with presets), **fan**, **swing** and **functions** (Gree quiet / xtra fan / fresh air / display are detected automatically).
+- **Heat pump** — a **double ring** shows the flow temperature (outer) and the DHW boiler temperature (inner); heating and DHW set points, modes (heating / cooling / hot water / auto) and quiet / weather-compensation / DHW-boost in one pop-up menu, power, COP and other readings in large tiles.
 - **Solar inverter** — animated power-flow diagram (PV, battery with SoC ring, grid, home) and today's produced / imported / exported energy and self-use. W/kW and Wh/kWh are converted automatically.
 - **Visual editor** — everything can be configured in the UI card editor (labels in English, Russian and Latvian).
 - Returns to the start screen after a configurable idle time.
@@ -31,7 +31,7 @@ recuperator (MVHR ventilation), air conditioners, a heat pump, a solar inverter,
 |---|---|
 | ![themes](images/themes-languages.png) | ![tiles](images/adaptive-tiles.png) |
 
-| Device pages | Mode pop-up menu |
+| Device pages | Pop-up menus |
 |---|---|
 | ![pages](images/device-pages.png) | ![popup](images/mode-popup.png) |
 
@@ -93,7 +93,9 @@ phone: [`examples/phone-view.yaml`](examples/phone-view.yaml).
 | `mode` | `select` / `input_select` with the operating modes |
 | `mode_protection`, `mode_economy`, `mode_comfort`, `mode_boost` | Option of `mode` that corresponds to each button. Empty = auto-detect by name (RU / LV / EN) |
 | `target`, `target_step` | `number` / `input_number` set point and +/- step (default 0.5) |
-| `airflow` | Fan level / airflow % — shown in the ring |
+| `airflow` | Fan level / airflow % — shown in the big ring |
+| `airflow_target`, `airflow_step` | Optional `number` / `input_number` set point for the airflow; adds − / + next to the ring (step, default 10) |
+| `airflow_m3h` | Optional airflow in m³/h, shown under the % value |
 | `indoor`, `outdoor`, `supply`, `extract`, `exhaust` | Temperatures |
 | `efficiency`, `fan_rpm`, `filter_days` | Heat recovery %, fan speed, days until filter change |
 | `night_cooling` | Switch shown as a toggle tile |
@@ -169,8 +171,10 @@ A list of extra tiles (the visual editor offers two; YAML allows more).
 - Свои кнопки: переход на другой дашборд или вид, открытие ссылки, карточка сущности или переключение сущности.
 - Выбор устройства: `nspanel` (480×480, весь экран) или `phone` (вертикальная раскладка с прокруткой).
 - Меню на самой панели: тёмная / светлая / авто тема, язык (русский, латышский, английский), 8 цветов акцента.
-- Разгруженные страницы устройств: главное значение и уставка крупно, до четырёх ключевых показателей в больших плитках;
-  выбор режимов, дополнительные функции и все остальные данные собраны в одном всплывающем меню (кнопка режима).
+- Разгруженные страницы устройств: главное значение крупно в кольце, уставки — большими кнопками − / +, выборы — во всплывающих меню.
+- Рекуператор: главное — скорость потока (большое кольцо, %, м³/ч, при желании − / + через `airflow_target`), целевая температура компактной строкой; отдельные кнопки «Режим работы» и «Данные».
+- Кондиционер: отдельные кнопки «Режим работы», «Вентилятор», «Жалюзи», «Функции».
+- Тепловой насос: двойное кольцо — температура подачи и температура воды в бойлере.
 - Визуальный редактор с подписями на русском, латышском и английском.
 
 **Установка:** HACS → ⋮ → *Пользовательские репозитории* → `https://github.com/keziksdmitrijs-byte/nspanel-pro-card`,
