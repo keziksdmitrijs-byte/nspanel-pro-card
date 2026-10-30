@@ -20,7 +20,7 @@ recuperator (MVHR ventilation), air conditioners, a heat pump, a solar inverter,
 - **Two layouts** — `nspanel` (fixed 480×480 layout scaled to the screen) or `phone` (portrait, scrollable).
 - **Menu** — dark / light / auto theme, language (Русский, Latviešu, English) and 8 accent colours, changeable right on the panel.
 - **Clean device pages** — the main value is shown in a big ring, set points have large − / + buttons, and choices live in pop-up menus instead of rows of buttons.
-- **Recuperator** — the airflow is the main element: a big ring with % and m³/h and optional − / + to change the fan level. The target temperature is a compact line below. Two buttons open the **operating mode** menu (protection / economy / comfort / boost, night cooling) and the **data** menu (all temperatures, recovery, fans, filter, status, errors).
+- **Recuperator** — four-block layout: top left a big **airflow** ring (% and m³/h, optional − / + to change the fan level), top right the **supply air temperature** and the **target temperature**, bottom the **operating mode** button (protection / economy / comfort / boost, night cooling) and the **data** button (all temperatures, recovery, fans, filter, status, errors).
 - **Air conditioners** — any number of `climate` entities with a unit switcher; four separate buttons open pop-up menus for **operating mode** (with presets), **fan**, **swing** and **functions** (Gree quiet / xtra fan / fresh air / display are detected automatically).
 - **Heat pump** — a **double ring** shows the flow temperature (outer) and the DHW boiler temperature (inner); heating and DHW set points, modes (heating / cooling / hot water / auto) and quiet / weather-compensation / DHW-boost in one pop-up menu, power, COP and other readings in large tiles.
 - **Solar inverter** — animated power-flow diagram (PV, battery with SoC ring, grid, home) and today's produced / imported / exported energy and self-use. W/kW and Wh/kWh are converted automatically.
@@ -172,7 +172,7 @@ A list of extra tiles (the visual editor offers two; YAML allows more).
 - Выбор устройства: `nspanel` (480×480, весь экран) или `phone` (вертикальная раскладка с прокруткой).
 - Меню на самой панели: тёмная / светлая / авто тема, язык (русский, латышский, английский), 8 цветов акцента.
 - Разгруженные страницы устройств: главное значение крупно в кольце, уставки — большими кнопками − / +, выборы — во всплывающих меню.
-- Рекуператор: главное — скорость потока (большое кольцо, %, м³/ч, при желании − / + через `airflow_target`), целевая температура компактной строкой; отдельные кнопки «Режим работы» и «Данные».
+- Рекуператор: слева сверху — кольцо скорости потока (%, м³/ч, при желании − / + через `airflow_target`), справа сверху — температура притока и целевая температура, снизу — кнопки «Режим работы» и «Данные».
 - Кондиционер: отдельные кнопки «Режим работы», «Вентилятор», «Жалюзи», «Функции».
 - Тепловой насос: двойное кольцо — температура подачи и температура воды в бойлере.
 - Визуальный редактор с подписями на русском, латышском и английском.
