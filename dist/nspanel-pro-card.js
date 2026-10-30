@@ -1,5 +1,5 @@
 /*!
- * NSPanel Pro Card v1.3.0
+ * NSPanel Pro Card v1.3.1
  * Full-screen smart-home panel for Home Assistant — Sonoff NSPanel Pro (480×480) or phone.
  * Clock + weather start screen, settings menu (theme / language / accent colour),
  * recuperator, air conditioner(s), heat pump, solar inverter and custom buttons.
@@ -8,7 +8,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.3.0';
+  var VERSION = '1.3.1';
   var CARD = 'nspanel-pro-card';
   var EDITOR = 'nspanel-pro-card-editor';
 
@@ -680,7 +680,7 @@
       this._pageEl = this.shadowRoot.getElementById('page');
       this._ovlEl = this.shadowRoot.getElementById('ovl');
       this._ssEl = this.shadowRoot.getElementById('ss');
-      this._ssEl.addEventListener('pointerdown', function (e) { e.preventDefault(); e.stopPropagation(); self._wake(); });
+      this._ssEl.addEventListener('pointerdown', function (e) { e.preventDefault(); e.stopPropagation(); self._swallowUntil = Date.now() + 800; self._wake(); });
       this._ssEl.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); });
       this.shadowRoot.addEventListener('click', function (e) { self._onClick(e); });
       this.shadowRoot.addEventListener('pointerdown', function () { self._lastTouch = Date.now(); }, { passive: true });
@@ -1808,6 +1808,7 @@
         if (n === this.shadowRoot) break;
         if (n.getAttribute && n.getAttribute('data-a')) { el = n; break; }
       }
+      if (this._swallowUntil && Date.now() < this._swallowUntil) { e.preventDefault(); e.stopPropagation(); return; }
       if (!el) return;
       this._lastTouch = Date.now();
       var a = el.getAttribute('data-a');
