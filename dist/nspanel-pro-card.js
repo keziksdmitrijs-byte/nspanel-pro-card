@@ -732,6 +732,7 @@
         z = clamp(Math.min(w, h) / base, 0.4, 3);
         lw = Math.min(w / z, base * 1.4); lh = h / z;
       }
+      this._room = { width: lw, height: lh };
       var key = [w, h, z, phone].join('x');
       if (key === this._fitKey) return;
       this._fitKey = key;
@@ -934,7 +935,8 @@
         });
         this._nestEl.appendChild(this._wall);
       }
-      this._wall.embed = { theme: look.theme, accent: look.accent, language: this._curLang, leave: this.t('home_screen'), unit: this._c._rec.unit };
+      this._wall.embed = { theme: look.theme, accent: look.accent, language: this._curLang, leave: this.t('home_screen'), unit: this._c._rec.unit,
+        width: this._room && this._room.width, height: this._room && this._room.height };
       this._wall.hass = this._hass;
       this._nestEl.style.display = 'block';
     }
