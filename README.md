@@ -93,7 +93,7 @@ phone: [`examples/phone-view.yaml`](examples/phone-view.yaml).
 | Option | Description |
 |---|---|
 | `enabled` | `false` hides the device |
-| `type` | `nest` (default): the page below, built from entities. `nest_new`: the NEST NSPanel panel of the AlpicAir NEST integration (version 0.4.0 or newer); the entity options are then not used |
+| `type` | `nest` (default): the page below, built from entities. `nest_new`: the NEST NSPanel panel of the AlpicAir NEST integration (version 0.6.0 or newer); the entity options are then not used |
 | `unit` | `nest_new` only: the config entry of the AlpicAir NEST unit, when there is more than one |
 | `name` | Tile / page title |
 | `power` | `switch` / `input_boolean` |
