@@ -20,7 +20,7 @@ recuperator (MVHR ventilation), air conditioners, a heat pump, a solar inverter,
 - **Two layouts** — `nspanel` (fixed 480×480 layout scaled to the screen) or `phone` (portrait, scrollable).
 - **Menu** — dark / light / auto theme, language (Русский, Latviešu, English) and 8 accent colours, changeable right on the panel.
 - **Clean device pages** — the main value is shown in a big ring, set points have large − / + buttons, and choices live in pop-up menus instead of rows of buttons.
-- **Recuperator** — four-block layout: top left a big **airflow** ring (% and m³/h, optional − / + to change the fan level), top right the **supply air temperature** and the **target temperature**, bottom the **operating mode** button (protection / economy / comfort / boost, night cooling) and the **data** button (all temperatures, recovery, fans, filter, status, errors).
+- **Recuperator** — two types. **Nest new** hosts the NEST NSPanel panel of the [AlpicAir NEST](https://github.com/keziksdmitrijs-byte/ha-alpicair-nest) integration right in the card: fan speed in a big ring with − / +, modes, temperature, schedule and every setting, with no entities to pick. **Nest** (the default) is a four-block layout: top left a big **airflow** ring (% and m³/h, optional − / + to change the fan level), top right the **supply air temperature** and the **target temperature**, bottom the **operating mode** button (protection / economy / comfort / boost, night cooling) and the **data** button (all temperatures, recovery, fans, filter, status, errors).
 - **Air conditioners** — any number of `climate` entities with a unit switcher; four separate buttons open pop-up menus for **operating mode** (with presets), **fan**, **swing** and **functions** (Gree quiet / xtra fan / fresh air / display are detected automatically).
 - **Heat pump** — a **double ring** shows the flow temperature (outer) and the DHW boiler temperature (inner); heating and DHW set points, modes (heating / cooling / hot water / auto) and quiet / weather-compensation / DHW-boost in one pop-up menu, power, COP and other readings in large tiles.
 - **Solar inverter** — animated power-flow diagram (PV, battery with SoC ring, grid, home) and today's produced / imported / exported energy and self-use. W/kW and Wh/kWh are converted automatically.
@@ -93,6 +93,8 @@ phone: [`examples/phone-view.yaml`](examples/phone-view.yaml).
 | Option | Description |
 |---|---|
 | `enabled` | `false` hides the device |
+| `type` | `nest` (default): the page below, built from entities. `nest_new`: the NEST NSPanel panel of the AlpicAir NEST integration (version 0.4.0 or newer); the entity options are then not used |
+| `unit` | `nest_new` only: the config entry of the AlpicAir NEST unit, when there is more than one |
 | `name` | Tile / page title |
 | `power` | `switch` / `input_boolean` |
 | `mode` | `select` / `input_select` with the operating modes |
@@ -202,7 +204,7 @@ A list of extra tiles (the visual editor offers two; YAML allows more).
 - Выбор устройства: `nspanel` (480×480, весь экран) или `phone` (вертикальная раскладка с прокруткой).
 - Меню на самой панели: тёмная / светлая / авто тема, язык (русский, латышский, английский), 8 цветов акцента.
 - Разгруженные страницы устройств: главное значение крупно в кольце, уставки — большими кнопками − / +, выборы — во всплывающих меню.
-- Рекуператор: слева сверху — кольцо скорости потока (%, м³/ч, при желании − / + через `airflow_target`), справа сверху — температура притока и целевая температура, снизу — кнопки «Режим работы» и «Данные».
+- Рекуператор: два типа. **Nest new** показывает прямо в карточке панель NEST NSPanel из интеграции [AlpicAir NEST](https://github.com/keziksdmitrijs-byte/ha-alpicair-nest): скорость вентиляторов в кольце с − / +, режимы, температура, расписание, все настройки; сущности выбирать не нужно. **Nest** (по умолчанию): слева сверху — кольцо скорости потока (%, м³/ч, при желании − / + через `airflow_target`), справа сверху — температура притока и целевая температура, снизу — кнопки «Режим работы» и «Данные».
 - Кондиционер: отдельные кнопки «Режим работы», «Вентилятор», «Жалюзи», «Функции».
 - Тепловой насос: двойное кольцо — температура подачи и температура воды в бойлере.
 - Заставка-часы: после бездействия — чёрный экран с крупными часами, датой и погодой; просыпается от касания, при включении экрана

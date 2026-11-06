@@ -1,5 +1,5 @@
 /*!
- * NSPanel Pro Card v1.3.1
+ * NSPanel Pro Card v1.4.0
  * Full-screen smart-home panel for Home Assistant — Sonoff NSPanel Pro (480×480) or phone.
  * Clock + weather start screen, settings menu (theme / language / accent colour),
  * recuperator, air conditioner(s), heat pump, solar inverter and custom buttons.
@@ -8,7 +8,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.3.1';
+  var VERSION = '1.4.0';
   var CARD = 'nspanel-pro-card';
   var EDITOR = 'nspanel-pro-card-editor';
 
@@ -22,6 +22,9 @@
   };
   var LOCALES = { ru: 'ru-RU', lv: 'lv-LV', en: 'en-GB' };
   var LANG_NAMES = { ru: 'Русский', lv: 'Latviešu', en: 'English' };
+  /* recuperator type "nest_new": the NEST NSPanel panel of the AlpicAir NEST integration, hosted in the card */
+  var NEST_WALL = 'alpicair-nest-wall';
+  var NEST_STATIC = '/alpicair_nest_static/';
 
   var WX_ICON = {
     'clear-night': 'mdi:weather-night', cloudy: 'mdi:weather-cloudy', exceptional: 'mdi:alert-circle-outline',
@@ -41,7 +44,7 @@
   /* ------------------------------------------------------------------ i18n */
   var T = {
     ru: {
-      settings: 'Настройки', theme: 'Тема', dark: 'Тёмная', light: 'Светлая', auto: 'Авто',
+      home_screen: 'Главный экран', settings: 'Настройки', theme: 'Тема', dark: 'Тёмная', light: 'Светлая', auto: 'Авто',
       language: 'Язык', accent: 'Цвет акцента',
       recuperator: 'Рекуператор', ac: 'Кондиционер', heatpump: 'Тепловой насос', solar: 'Солнечная станция',
       weather: 'Погода', on: 'Вкл', off: 'Выкл', unavailable: 'Недоступно',
@@ -49,6 +52,8 @@
       target: 'Целевая темп.', indoor: 'В доме', outdoor: 'Улица', supply: 'Приток', extract: 'Вытяжка',
       exhaust: 'Выброс', recovery: 'Рекуперация', filter: 'Фильтр', days: 'дн.', night_cooling: 'Ночное охл.',
       fans: 'Вентиляторы', airflow: 'Расход',
+      nest_modes: ['Выключено', 'Никого нет', 'Эконом', 'Комфорт', 'Буст', 'Вытяжка'],
+      nest_loading: 'Загрузка…', nest_missing: 'Интеграция AlpicAir NEST не найдена', nest_old: 'Обновите интеграцию AlpicAir NEST',
       m_protection: 'Защита', m_economy: 'Эконом', m_comfort: 'Комфорт', m_boost: 'Интенсив', m_off: 'Выкл',
       errors: 'Ошибки', standby: 'Ожидание', mode_lbl: 'Режим', flow_speed: 'Скорость потока', data_short: 'Данные', status: 'Состояние', boiler: 'Бойлер', modes: 'Режим работы', functions: 'Функции', data: 'Все данные', ctl: 'Режимы и функции',
       hvac_auto: 'Авто', hvac_cool: 'Холод', hvac_heat: 'Тепло', hvac_dry: 'Осушение', hvac_fan_only: 'Вентиляция',
@@ -81,7 +86,7 @@
       }
     },
     lv: {
-      settings: 'Iestatījumi', theme: 'Tēma', dark: 'Tumšā', light: 'Gaišā', auto: 'Auto',
+      home_screen: 'Sākuma ekrāns', settings: 'Iestatījumi', theme: 'Tēma', dark: 'Tumšā', light: 'Gaišā', auto: 'Auto',
       language: 'Valoda', accent: 'Akcenta krāsa',
       recuperator: 'Rekuperators', ac: 'Kondicionieris', heatpump: 'Siltumsūknis', solar: 'Saules stacija',
       weather: 'Laikapstākļi', on: 'Iesl.', off: 'Izsl.', unavailable: 'Nav pieejams',
@@ -89,6 +94,8 @@
       target: 'Mērķa temp.', indoor: 'Telpā', outdoor: 'Ārā', supply: 'Pieplūde', extract: 'Nosūce',
       exhaust: 'Izplūde', recovery: 'Rekuperācija', filter: 'Filtrs', days: 'd.', night_cooling: 'Nakts dzes.',
       fans: 'Ventilatori', airflow: 'Plūsma',
+      nest_modes: ['Izslēgts', 'Neviena nav', 'Ekonomija', 'Komforts', 'Boost', 'Nosūcējs'],
+      nest_loading: 'Ielādē…', nest_missing: 'AlpicAir NEST integrācija nav atrasta', nest_old: 'Atjauniniet AlpicAir NEST integrāciju',
       m_protection: 'Aizsardzība', m_economy: 'Ekonomija', m_comfort: 'Komforts', m_boost: 'Intensīvs', m_off: 'Izsl.',
       errors: 'Kļūdas', standby: 'Gaidīšanas režīms', mode_lbl: 'Režīms', flow_speed: 'Plūsmas ātrums', data_short: 'Dati', status: 'Statuss', boiler: 'Boileris', modes: 'Darba režīms', functions: 'Funkcijas', data: 'Visi dati', ctl: 'Režīmi un funkcijas',
       hvac_auto: 'Auto', hvac_cool: 'Dzesēt', hvac_heat: 'Sildīt', hvac_dry: 'Žāvēt', hvac_fan_only: 'Ventilēt',
@@ -121,7 +128,7 @@
       }
     },
     en: {
-      settings: 'Settings', theme: 'Theme', dark: 'Dark', light: 'Light', auto: 'Auto',
+      home_screen: 'Start screen', settings: 'Settings', theme: 'Theme', dark: 'Dark', light: 'Light', auto: 'Auto',
       language: 'Language', accent: 'Accent colour',
       recuperator: 'Recuperator', ac: 'Air conditioner', heatpump: 'Heat pump', solar: 'Solar plant',
       weather: 'Weather', on: 'On', off: 'Off', unavailable: 'Unavailable',
@@ -129,6 +136,8 @@
       target: 'Target temp.', indoor: 'Indoor', outdoor: 'Outdoor', supply: 'Supply', extract: 'Extract',
       exhaust: 'Exhaust', recovery: 'Recovery', filter: 'Filter', days: 'd', night_cooling: 'Night cool',
       fans: 'Fans', airflow: 'Airflow',
+      nest_modes: ['Off', 'Unoccupied', 'Economy', 'Comfort', 'Boost', 'Hood'],
+      nest_loading: 'Loading…', nest_missing: 'The AlpicAir NEST integration was not found', nest_old: 'Update the AlpicAir NEST integration',
       m_protection: 'Protection', m_economy: 'Economy', m_comfort: 'Comfort', m_boost: 'Boost', m_off: 'Off',
       errors: 'Errors', standby: 'Standby', mode_lbl: 'Mode', flow_speed: 'Airflow speed', data_short: 'Data', status: 'Status', boiler: 'Boiler', modes: 'Operating mode', functions: 'Functions', data: 'All data', ctl: 'Modes & functions',
       hvac_auto: 'Auto', hvac_cool: 'Cool', hvac_heat: 'Heat', hvac_dry: 'Dry', hvac_fan_only: 'Fan',
@@ -578,7 +587,8 @@
     '.ss-d{font-size:22px;color:#8a93a3;margin-top:10px}',
     '.ss-w{display:flex;align-items:center;justify-content:center;margin-top:26px;font-size:30px;color:#cfd4dc}',
     '.ss-w ha-icon{--mdc-icon-size:38px;margin-right:10px}.ss-w small{font-size:17px;color:#7d8696;margin-left:12px}',
-    '.ss.ph .ss-t{font-size:104px;letter-spacing:-4px}'
+    '.ss.ph .ss-t{font-size:104px;letter-spacing:-4px}',
+    '#nest{position:absolute;top:0;left:0;right:0;bottom:0;z-index:5;display:none;background:var(--bg)}'
   ].join('\n');
 
   /* ==================================================================== card */
@@ -630,6 +640,9 @@
       this._watch = Object.keys(watch);
       this._sig = '';
       this._fitKey = '';
+      var nestKey = this._nestType() ? 'nest|' + (this._c._rec.unit || '') : '';
+      if (nestKey !== this._nestKey) { this._nestUnsub(); this._nestKey = nestKey; this._nestData = null; }
+      if (this._hass) this._nestSubscribe();
       if (['home', 'menu', 'weather', 'rec', 'ac', 'hp', 'solar'].indexOf(this._page) < 0) this._page = 'home';
       if (this._hass && this._pageEl) this._render(true);
     }
@@ -641,7 +654,8 @@
       var first = !this._hass;
       this._hass = hass;
       if (!this._pageEl) this._build();
-      if (first) this._subscribeForecast();
+      if (first) { this._subscribeForecast(); this._nestSubscribe(); }
+      if (this._wall) this._wall.hass = hass;
       var sig = this._signature();
       if (sig !== this._sig) { this._sig = sig; this._render(); }
       this._checkWake();
@@ -659,6 +673,7 @@
       document.addEventListener('visibilitychange', this._onVis);
       if (this._hass && this._c) {
         this._subscribeForecast();
+        this._nestSubscribe();
         this._render(true);
       }
       setTimeout(function () { self._fit(); }, 50);
@@ -669,15 +684,17 @@
       window.removeEventListener('resize', this._onResize);
       document.removeEventListener('visibilitychange', this._onVis);
       this._unsubForecast();
+      this._nestUnsub();
     }
 
     /* ------------------------------------------------------- infrastructure */
     _build() {
       var self = this;
       this.shadowRoot.innerHTML = '<style>' + STYLE + '</style>' +
-        '<div class="screen t-dark" id="screen"><div class="page" id="page"></div><div id="ovl"></div><div id="ss"></div></div>';
+        '<div class="screen t-dark" id="screen"><div class="page" id="page"></div><div id="nest"></div><div id="ovl"></div><div id="ss"></div></div>';
       this._screen = this.shadowRoot.getElementById('screen');
       this._pageEl = this.shadowRoot.getElementById('page');
+      this._nestEl = this.shadowRoot.getElementById('nest');
       this._ovlEl = this.shadowRoot.getElementById('ovl');
       this._ssEl = this.shadowRoot.getElementById('ss');
       this._ssEl.addEventListener('pointerdown', function (e) { e.preventDefault(); e.stopPropagation(); self._swallowUntil = Date.now() + 800; self._wake(); });
@@ -850,6 +867,78 @@
       }
     }
 
+    /* AlpicAir NEST: live values for the start-screen tile, straight from the integration */
+    _nestType() { return !!(this._c && this._c._rec && this._c._rec.type === 'nest_new'); }
+    _nestSubscribe() {
+      var self = this;
+      if (this._nestSub || !this._nestType() || !this._hass || !this.isConnected) return;
+      var msg = { type: 'alpicair_nest/subscribe' };
+      if (this._c._rec.unit) msg.entry_id = this._c._rec.unit;
+      this._nestData = { dp: {}, sp: {}, available: true };
+      try {
+        this._nestSub = this._hass.connection.subscribeMessage(function (ev) {
+          var d = self._nestData;
+          if (!d) return;
+          Object.assign(d.dp, ev.dp);
+          Object.assign(d.sp, ev.sp);
+          d.available = ev.available;
+          d.faults = ev.faults || [];
+          d.ready = true;
+          if (self._page === 'home' && !self._ssOn) self._render();
+        }, msg);
+        this._nestSub.catch(function () { self._nestSub = null; if (self._nestData) self._nestData.failed = true; self._render(); });
+      } catch (e) { this._nestSub = null; }
+    }
+    _nestUnsub() {
+      if (this._nestSub) {
+        this._nestSub.then(function (u) { if (u) u(); }).catch(function () {});
+        this._nestSub = null;
+      }
+    }
+    _nestModuleUrl() {
+      var panels = (this._hass && this._hass.panels) || {};
+      var p = panels['alpicair-nest-wall'] || panels['alpicair-nest'];
+      if (!p) return null;
+      var url = (p.config && p.config._panel_custom && p.config._panel_custom.module_url) || '';
+      var v = /[?&]v=([^&]+)/.exec(url);
+      return NEST_STATIC + NEST_WALL + '.js' + (v ? '?v=' + v[1] : '');
+    }
+    _nestLoad() {
+      var self = this;
+      if (customElements.get(NEST_WALL) || this._nestLoading) return;
+      var url = this._nestModuleUrl();
+      if (!url) { this._nestProblem = 'nest_missing'; return; }
+      this._nestLoading = true;
+      var script = document.createElement('script');
+      script.type = 'module';
+      script.src = url;
+      script.onerror = function () { self._nestProblem = 'nest_missing'; self._render(true); };
+      document.head.appendChild(script);
+      customElements.whenDefined(NEST_WALL).then(function () { self._render(true); });
+    }
+    /* shows the hosted panel over the page while the recuperator page is open */
+    _nestShow(look) {
+      var self = this;
+      var on = this._page === 'rec' && this._nestType() && !this._ssOn;
+      if (!on) { if (this._nestEl) this._nestEl.style.display = 'none'; return; }
+      var Wall = customElements.get(NEST_WALL);
+      if (!Wall) { this._nestLoad(); return; }
+      if (!Wall.EMBED) { this._nestProblem = 'nest_old'; this._nestEl.style.display = 'none'; return; }
+      if (!this._wall) {
+        this._wall = document.createElement(NEST_WALL);
+        this._wall.style.cssText = 'display:block;width:100%;height:100%';
+        this._wall.addEventListener('alpicair-nest-leave', function () {
+          self._page = 'home';
+          self._sheet = null;
+          self._render(true);
+        });
+        this._nestEl.appendChild(this._wall);
+      }
+      this._wall.embed = { theme: look.theme, accent: look.accent, language: this._curLang, leave: this.t('home_screen'), unit: this._c._rec.unit };
+      this._wall.hass = this._hass;
+      this._nestEl.style.display = 'block';
+    }
+
     /* ---------------------------------------------------------- state utils */
     _st(eid) { return eid && this._hass ? this._hass.states[eid] : undefined; }
     _ok(s) { return !!s && s.state !== 'unavailable' && s.state !== 'unknown'; }
@@ -990,6 +1079,7 @@
       this._screen.style.setProperty('--accent', acc);
       this._screen.style.setProperty('--acc-rgb', hexRgb(acc));
 
+      this._nestShow({ theme: theme, accent: acc });
       var html;
       try {
         var fn = this['_p_' + this._page];
@@ -1266,7 +1356,18 @@
       if (m && this._curLang !== 'ru') return m[1];
       return raw;
     }
+    _tileNest() {
+      var r = this._c._rec, d = this._nestData || { dp: {} }, dp = d.dp;
+      var mode = dp.CurrentOperatingMode;
+      var on = d.ready && d.available !== false && mode > 0;
+      var st = !d.ready ? (d.failed ? this.t('unavailable') : '') : d.available === false ? this.t('unavailable') :
+        (this.t('nest_modes')[mode] || '') + (on && dp.Fan1_Output !== undefined ? ' · ' + this._num(dp.Fan1_Output, 0) + '%' : '');
+      var temp = dp.T_Extract;
+      return this._tile('nav', 'mdi:hvac', r.name || this.t('recuperator'), st,
+        temp === undefined || temp === null ? '' : this._num(temp, 1) + '<small>°C</small>', on, { p: 'rec' });
+    }
     _tileRec() {
+      if (this._nestType()) return this._tileNest();
       var r = this._c._rec, i = this._recInfo();
       var st = !i.avail ? this.t('unavailable') : !i.on ? this.t('off') :
         (i.mode ? this.t('m_' + i.mode) : this.t('on')) + (isNaN(i.airflow) ? '' : ' · ' + this._num(i.airflow, 0) + '%');
@@ -1277,6 +1378,12 @@
     _p_rec() {
       var r = this._c._rec;
       if (!r) return this._p_home();
+      if (this._nestType()) {
+        /* the hosted panel covers this page once it is ready */
+        var problem = this._nestProblem;
+        return this._hdr(r.name || this.t('recuperator'), '') + '<div class="na">' +
+          ic(problem ? 'mdi:alert-circle-outline' : 'mdi:hvac') + '<div>' + esc(this.t(problem || 'nest_loading')) + '</div></div>';
+      }
       var i = this._recInfo(), self = this;
       var status = this._st(r.status);
       var errN = this._n(r.error_count, 0);
@@ -1818,7 +1925,12 @@
 
       switch (a) {
         case 'noop': return;
-        case 'nav': this._page = d('p'); this._sheet = null; this._render(true); return;
+        case 'nav':
+          this._page = d('p');
+          this._sheet = null;
+          if (this._page === 'rec' && this._wall && this._wall.home) this._wall.home();
+          this._render(true);
+          return;
         case 'home': this._page = 'home'; this._sheet = null; this._render(true); return;
         case 'set': this._setSetting(d('s'), d('v')); return;
         case 'toggle': this._call('homeassistant', 'toggle', { entity_id: d('e') }); return;
@@ -1927,6 +2039,7 @@
       theme_entity: 'Theme helper (optional input_select)', language_entity: 'Language helper (optional input_select)', accent_entity: 'Accent helper (optional input_select)',
       dark: 'Dark', light: 'Light', auto: 'Auto (sun)',
       c_blue: 'Blue', c_teal: 'Teal', c_green: 'Green', c_amber: 'Amber', c_orange: 'Orange', c_red: 'Red', c_pink: 'Pink', c_purple: 'Purple',
+      rec_type: 'Recuperator type', t_nest: 'Nest — page built from the entities below', t_nest_new: 'Nest new — the NEST NSPanel panel', unit: 'AlpicAir NEST unit (optional)',
       sec_recuperator: 'Recuperator (ventilation)', sec_air_conditioner: 'Air conditioners', sec_heat_pump: 'Heat pump', sec_solar: 'Solar inverter',
       sec_screensaver: 'Clock screensaver', timeout: 'Show after (s)', timeout_entity: 'Timeout helper (input_number)', enabled_entity: 'On/off helper (input_boolean)', wake_entities: 'Wake on change of (proximity / presence / event)', users: 'Only for HA users (empty = all)', on_start: 'Run on start (script)', on_wake: 'Run on wake (script)', show_weather: 'Show weather',
       sec_button_1: 'Custom button 1', sec_button_2: 'Custom button 2', sec_modes: 'Mode mapping', sec_hp_modes: 'Mode mapping',
@@ -1957,6 +2070,7 @@
       theme_entity: 'Хелпер темы (необязательно, input_select)', language_entity: 'Хелпер языка (необязательно, input_select)', accent_entity: 'Хелпер цвета (необязательно, input_select)',
       dark: 'Тёмная', light: 'Светлая', auto: 'Авто (по солнцу)',
       c_blue: 'Синий', c_teal: 'Бирюзовый', c_green: 'Зелёный', c_amber: 'Янтарный', c_orange: 'Оранжевый', c_red: 'Красный', c_pink: 'Розовый', c_purple: 'Фиолетовый',
+      rec_type: 'Тип рекуператора', t_nest: 'Nest — страница из сущностей ниже', t_nest_new: 'Nest new — панель NEST NSPanel', unit: 'Установка AlpicAir NEST (необязательно)',
       sec_recuperator: 'Рекуператор (вентиляция)', sec_air_conditioner: 'Кондиционеры', sec_heat_pump: 'Тепловой насос', sec_solar: 'Инвертор солнечной станции',
       sec_screensaver: 'Заставка-часы', timeout: 'Показывать через (с)', timeout_entity: 'Хелпер времени (input_number)', enabled_entity: 'Хелпер вкл/выкл (input_boolean)', wake_entities: 'Будить при изменении (приближение / присутствие / событие)', users: 'Только для пользователей HA (пусто = все)', on_start: 'Запустить при начале (скрипт)', on_wake: 'Запустить при пробуждении (скрипт)', show_weather: 'Показывать погоду',
       sec_button_1: 'Своя кнопка 1', sec_button_2: 'Своя кнопка 2', sec_modes: 'Соответствие режимов', sec_hp_modes: 'Соответствие режимов',
@@ -1987,6 +2101,7 @@
       theme_entity: 'Tēmas palīgs (neobligāti, input_select)', language_entity: 'Valodas palīgs (neobligāti, input_select)', accent_entity: 'Krāsas palīgs (neobligāti, input_select)',
       dark: 'Tumšā', light: 'Gaišā', auto: 'Auto (pēc saules)',
       c_blue: 'Zila', c_teal: 'Tirkīza', c_green: 'Zaļa', c_amber: 'Dzintara', c_orange: 'Oranža', c_red: 'Sarkana', c_pink: 'Rozā', c_purple: 'Violeta',
+      rec_type: 'Rekuperatora tips', t_nest: 'Nest — lapa no zemāk norādītajām entītijām', t_nest_new: 'Nest new — NEST NSPanel panelis', unit: 'AlpicAir NEST iekārta (neobligāti)',
       sec_recuperator: 'Rekuperators (ventilācija)', sec_air_conditioner: 'Kondicionieri', sec_heat_pump: 'Siltumsūknis', sec_solar: 'Saules invertors',
       sec_screensaver: 'Pulksteņa ekrānsaudzētājs', timeout: 'Rādīt pēc (s)', timeout_entity: 'Laika palīgs (input_number)', enabled_entity: 'Iesl./izsl. palīgs (input_boolean)', wake_entities: 'Modināt pie izmaiņām (tuvums / klātbūtne / notikums)', users: 'Tikai HA lietotājiem (tukšs = visiem)', on_start: 'Palaist sākumā (skripts)', on_wake: 'Palaist pamostoties (skripts)', show_weather: 'Rādīt laikapstākļus',
       sec_button_1: 'Sava poga 1', sec_button_2: 'Sava poga 2', sec_modes: 'Režīmu atbilstība', sec_hp_modes: 'Režīmu atbilstība',
@@ -2014,6 +2129,8 @@
   var EH = {
     en: {
       device: 'NSPanel: fixed 480×480 layout scaled to the screen. Phone: portrait layout with scrolling.',
+      rec_type: 'Nest new needs the AlpicAir NEST integration and shows its NEST NSPanel panel: fan speed, modes, schedule, every setting. No entities to pick.',
+      unit: 'Only needed with more than one unit.',
       battery_invert: 'Card expects + = charging. Enable if your inverter reports + when discharging.',
       grid_invert: 'Card expects + = import from grid. Enable if your inverter reports + when exporting.',
       theme_entity: 'Without helpers the choice made on the panel is stored in the browser of that device.',
@@ -2022,6 +2139,8 @@
     },
     ru: {
       device: 'NSPanel: фиксированная раскладка 480×480, масштабируется под экран. Телефон: вертикальная раскладка с прокруткой.',
+      rec_type: 'Nest new работает через интеграцию AlpicAir NEST и показывает её панель NEST NSPanel: скорость вентиляторов, режимы, расписание, все настройки. Сущности выбирать не нужно.',
+      unit: 'Нужно, только если установок несколько.',
       battery_invert: 'Карточка ожидает «+» = заряд. Включите, если инвертор показывает «+» при разряде.',
       grid_invert: 'Карточка ожидает «+» = импорт из сети. Включите, если инвертор показывает «+» при экспорте.',
       theme_entity: 'Без хелперов выбор, сделанный на панели, хранится в браузере этого устройства.',
@@ -2030,6 +2149,8 @@
     },
     lv: {
       device: 'NSPanel: fiksēts 480×480 izkārtojums, mērogots ekrānam. Telefons: vertikāls izkārtojums ar ritināšanu.',
+      rec_type: 'Nest new darbojas caur AlpicAir NEST integrāciju un rāda tās NEST NSPanel paneli: ventilatoru ātrums, režīmi, grafiks, visi iestatījumi. Entītijas nav jāizvēlas.',
+      unit: 'Vajadzīgs tikai tad, ja iekārtas ir vairākas.',
       battery_invert: 'Kartīte sagaida “+” = uzlāde. Ieslēdziet, ja invertors rāda “+” izlādes laikā.',
       grid_invert: 'Kartīte sagaida “+” = imports no tīkla. Ieslēdziet, ja invertors rāda “+” eksporta laikā.',
       theme_entity: 'Bez palīgiem panelī izdarītā izvēle tiek saglabāta šīs ierīces pārlūkā.',
@@ -2133,6 +2254,8 @@
         if (!isObj(d[k])) d[k] = { enabled: false };
         else if (d[k].enabled === undefined) d[k].enabled = true;
       });
+      d.recuperator.rec_type = d.recuperator.type || 'nest';
+      delete d.recuperator.type;
       var bs = d.custom_buttons || [];
       var withAction = function (b) {
         var o = Object.assign({ enabled: true }, b);
@@ -2149,6 +2272,13 @@
     _fromForm(d) {
       var c = { type: 'custom:' + CARD };
       Object.keys(d).forEach(function (k) { if (k !== 'button_1' && k !== 'button_2') c[k] = d[k]; });
+      if (isObj(c.recuperator)) {
+        var rc = Object.assign({}, c.recuperator);
+        if (rc.rec_type === 'nest_new') rc.type = 'nest_new';
+        else { delete rc.type; delete rc.unit; }
+        delete rc.rec_type;
+        c.recuperator = rc;
+      }
       var orig = (isObj(this._config.air_conditioner) && this._config.air_conditioner.entities) || this._config.air_conditioners || [];
       var named = {};
       orig.forEach(function (a) { if (isObj(a) && a.entity) named[a.entity] = a; });
@@ -2204,7 +2334,7 @@
         fields.push(G([E('entity'), TX('subtitle')]));
         return sec(name, 'mdi:gesture-tap-button', fields);
       };
-      var rec = d.recuperator || {}, hp = d.heat_pump || {};
+      var rec = Object.assign({}, d.recuperator || {}, { type: (d.recuperator || {}).rec_type }), hp = d.heat_pump || {};
 
       return [
         SEL('device', [['nspanel', L('dev_nspanel')], ['phone', L('dev_phone')]]),
@@ -2218,7 +2348,12 @@
           ]),
           E('theme_entity', 'input_select'), E('language_entity', 'input_select'), E('accent_entity', 'input_select')
         ]),
-        sec('recuperator', 'mdi:hvac', [
+        sec('recuperator', 'mdi:hvac', rec.type === 'nest_new' ? [
+          SEL('rec_type', [['nest', L('t_nest')], ['nest_new', L('t_nest_new')]]),
+          TX('name'),
+          { name: 'unit', selector: { config_entry: { integration: 'alpicair_nest' } } }
+        ] : [
+          SEL('rec_type', [['nest', L('t_nest')], ['nest_new', L('t_nest_new')]]),
           TX('name'),
           G([E('power', ['switch', 'input_boolean']), E('mode', ['select', 'input_select']),
             E('target', ['number', 'input_number']), { name: 'target_step', selector: { number: { min: 0.1, max: 5, step: 0.1, mode: 'box' } } }]),
