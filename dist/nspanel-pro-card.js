@@ -1,5 +1,5 @@
 /*!
- * NSPanel Pro Card v1.6.0
+ * NSPanel Pro Card v1.6.1
  * Full-screen smart-home panel for Home Assistant — Sonoff NSPanel Pro (480×480) or phone.
  * Clock + weather start screen, settings menu (theme / language / accent colour),
  * recuperator, air conditioner(s), heat pump, solar inverter and custom buttons.
@@ -8,7 +8,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.6.0';
+  var VERSION = '1.6.1';
   var CARD = 'nspanel-pro-card';
   var EDITOR = 'nspanel-pro-card-editor';
 
@@ -71,6 +71,7 @@
       x_quiet_mode: 'Тихий', x_xtra_fan: 'Доп. вент.', x_fresh_air: 'Свежий возд.', x_panel_light: 'Подсветка',
       hp_heat: 'Отопление', hp_cool: 'Охлаждение', hp_dhw: 'Горячая вода', hp_auto: 'Авто',
       hp_heat_dhw: 'Отопление + ГВС', hp_cool_dhw: 'Охлаждение + ГВС', heaters: 'Электронагрев', hp_error: 'Ошибка',
+      temps: 'Температуры', hp_out: 'Выход насоса', room: 'Комната', delta_t: 'Подача − обратка', setpoints: 'Уставки', water_cool: 'Охлаждение',
       st_off: 'Выключен', st_idle: 'Ожидание', st_heat: 'Нагрев', st_cool: 'Охлаждение', st_dhw: 'Нагрев ГВС',
       dhw: 'ГВС', flow: 'Подача', ret: 'Обратка', tank: 'Бак ГВС', compressor: 'Компрессор', power: 'Мощность',
       heat_out: 'Тепло', cop: 'COP', today: 'Сегодня', quiet: 'Тихий', weather_comp: 'Погодозав.',
@@ -114,6 +115,7 @@
       x_quiet_mode: 'Klusais', x_xtra_fan: 'Papildu vent.', x_fresh_air: 'Svaigs gaiss', x_panel_light: 'Displejs',
       hp_heat: 'Apkure', hp_cool: 'Dzesēšana', hp_dhw: 'Karstais ūdens', hp_auto: 'Auto',
       hp_heat_dhw: 'Apkure + KŪ', hp_cool_dhw: 'Dzesēšana + KŪ', heaters: 'Elektriskā sildīšana', hp_error: 'Kļūda',
+      temps: 'Temperatūras', hp_out: 'Sūkņa izeja', room: 'Telpa', delta_t: 'Turpgaita − atgaita', setpoints: 'Iestatījumi', water_cool: 'Dzesēšana',
       st_off: 'Izslēgts', st_idle: 'Gaidīšana', st_heat: 'Sildīšana', st_cool: 'Dzesēšana', st_dhw: 'KŪ sildīšana',
       dhw: 'KŪ', flow: 'Turpgaita', ret: 'Atgaita', tank: 'KŪ tvertne', compressor: 'Kompresors', power: 'Jauda',
       heat_out: 'Siltums', cop: 'COP', today: 'Šodien', quiet: 'Klusais', weather_comp: 'Laika līkne',
@@ -157,6 +159,7 @@
       x_quiet_mode: 'Quiet', x_xtra_fan: 'Xtra fan', x_fresh_air: 'Fresh air', x_panel_light: 'Display',
       hp_heat: 'Heating', hp_cool: 'Cooling', hp_dhw: 'Hot water', hp_auto: 'Auto',
       hp_heat_dhw: 'Heat + hot water', hp_cool_dhw: 'Cool + hot water', heaters: 'Electric heating', hp_error: 'Error',
+      temps: 'Temperatures', hp_out: 'Heat pump outlet', room: 'Room', delta_t: 'Flow − return', setpoints: 'Set points', water_cool: 'Cooling',
       st_off: 'Off', st_idle: 'Idle', st_heat: 'Heating', st_cool: 'Cooling', st_dhw: 'Heating DHW',
       dhw: 'DHW', flow: 'Flow', ret: 'Return', tank: 'DHW tank', compressor: 'Compressor', power: 'Power',
       heat_out: 'Heat', cop: 'COP', today: 'Today', quiet: 'Quiet', weather_comp: 'Weather comp.',
@@ -198,7 +201,8 @@
     power: ['switch', 'power'], mode: ['select', 'mode'], water_target: ['number', 'heating_water_setpoint'],
     water_target_cool: ['number', 'cooling_water_setpoint'], dhw_target: ['water_heater', 'tank'],
     water_out: ['sensor', 'water_outlet'], water_in: ['sensor', 'water_inlet'], dhw_tank: ['sensor', 'tank_temperature'],
-    quiet: ['switch', 'quiet'], dhw_boost: ['switch', 'fast_hot_water'], error: ['sensor', 'error_code']
+    quiet: ['switch', 'quiet'], dhw_boost: ['switch', 'fast_hot_water'], error: ['sensor', 'error_code'],
+    hp_out: ['sensor', 'heat_pump_outlet'], room: ['sensor', 'room_temperature']
   };
   var EWPE_HEATERS = ['tank_heater', 'heater_1', 'heater_2'];
   /* the entities of one EWPE HP unit, by card field; the first unit unless one is named */
@@ -552,6 +556,9 @@
     '.kpi{background:var(--sf);border-radius:20px;padding:10px 12px;box-shadow:var(--sh);min-width:0;height:86px;display:flex;flex-direction:column;justify-content:space-between}',
     '.kpi-l{display:flex;align-items:center;font-size:12px;color:var(--tx2);white-space:nowrap;overflow:hidden}',
     '.kpi-l ha-icon{--mdc-icon-size:16px;margin-right:5px}',
+    'button.kpi{border:0;font:inherit;color:inherit;text-align:left;cursor:pointer;width:100%}',
+    'button.kpi:active{transform:scale(.97)}',
+    '.kpi-l ha-icon.kpi-more{margin:0 0 0 auto;color:var(--tx3)}',
     '.kpi-v{font-size:26px;font-weight:600;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.5px}',
     '.kpi-v small{font-size:14px;color:var(--tx2);font-weight:500;margin-left:3px;letter-spacing:0}',
     '.kpi.warn .kpi-l,.kpi.warn .kpi-v{color:#ef4444}',
@@ -700,7 +707,9 @@
     /* heat_pump.ewpe_hp: fields left empty are taken from the EWPE HP integration */
     _ewpe() {
       var base = this._hpBase;
-      if (!base || !base.ewpe_hp) return;
+      /* ewpe_hp, or a heat pump section without a single entity of its own: the interface is right from the start */
+      var own = ['power', 'mode', 'status', 'water_out', 'water_target', 'dhw_target'].some(function (k) { return !!(base && base[k]); });
+      if (!base || (!base.ewpe_hp && own)) return;
       var found = ewpeFields(this._hass, base.ewpe_hp);
       var key = JSON.stringify(found);
       if (key === this._ewpeKey) return;
@@ -1275,8 +1284,10 @@
     }
     _kpi(icon, label, value, unit, opt) {
       opt = opt || {};
-      return '<div class="kpi' + (opt.warn ? ' warn' : '') + '"><div class="kpi-l">' + ic(icon) + '<span>' + esc(label) + '</span></div>' +
-        '<div class="kpi-v">' + value + (unit ? '<small>' + esc(unit) + '</small>' : '') + '</div></div>';
+      var tag = opt.sheet ? 'button' : 'div';
+      return '<' + tag + ' class="kpi' + (opt.warn ? ' warn' : '') + (opt.sheet ? ' tap" data-a="sheet" data-v="' + esc(opt.sheet) : '') + '">' +
+        '<div class="kpi-l">' + ic(icon) + '<span>' + esc(label) + '</span>' + (opt.sheet ? ic('mdi:chevron-up', 'kpi-more') : '') + '</div>' +
+        '<div class="kpi-v">' + value + (unit ? '<small>' + esc(unit) + '</small>' : '') + '</div></' + tag + '>';
     }
     _kpis(list) {
       if (!list.length) return '';
@@ -1818,7 +1829,7 @@
           subs.join(' · '), i.on ? '' : 'var(--sf3)');
       }
       var kp = this._kpis(this._hpStats().filter(function (x) { return !(c.dhw_tank && x[4] === 'tank'); })
-        .map(function (x) { return self._kpi(x[0], x[1], x[2], x[3]); }));
+        .map(function (x) { return self._kpi(x[0], x[1], x[2], x[3], x[4] === 'ret' ? { sheet: 'hp_temps' } : null); }));
       return hdr + '<div class="ctl hero">' + ring + (steppers.length ? '<div class="col">' + steppers.join('') + '</div>' : '') + '</div>' + mb + kp;
     }
     _hpStats() {
@@ -1828,7 +1839,7 @@
       if (c.dhw_tank) out.push(['mdi:water-thermometer', this.t('tank'), this._num(this._n(c.dhw_tank), 1), '°C', 'tank']);
       if (c.electric_power) out.push(['mdi:flash', this.t('power'), this._num(pkw, pkw < 10 ? 1 : 0), this.t('u_kw')]);
       if (c.cop) out.push(['mdi:gauge', this.t('cop'), this._num(cop, 1), '']);
-      if (c.water_in) out.push(['mdi:thermometer-chevron-down', this.t('ret'), this._num(this._n(c.water_in), 1), '°C']);
+      if (c.water_in) out.push(['mdi:thermometer-chevron-down', this.t('ret'), this._num(this._n(c.water_in), 1), '°C', 'ret']);
       if (c.compressor) out.push(['mdi:sine-wave', this.t('compressor'), this._num(i.hz, 0), this.t('u_hz')]);
       if (c.heaters && c.heaters.length) {
         var self2 = this, onH = c.heaters.filter(function (e) { return self2._isOn(e); }).length;
@@ -1837,6 +1848,30 @@
       if (c.electric_power && c.cop) out.push(['mdi:fire', this.t('heat_out'), this._num(pkw * cop, 1), this.t('u_kw')]);
       if (c.energy_today) out.push(['mdi:counter', this.t('today'), this._num(toKwh(this._st(c.energy_today)), 1), this.t('u_kwh')]);
       return out;
+    }
+    _sh_hp_temps() {
+      var c = this._c._hp, self = this;
+      if (!c) return null;
+      var row = function (icon, label, v, digits) { return isNaN(v) ? null : self._shInfo(icon, label, self._num(v, digits === undefined ? 1 : digits), '°C'); };
+      var wout = this._n(c.water_out), win = this._n(c.water_in);
+      var temps = [
+        row('mdi:thermometer-chevron-up', this.t('flow'), wout),
+        row('mdi:thermometer-chevron-down', this.t('ret'), win),
+        row('mdi:delta', this.t('delta_t'), wout - win),
+        c.hp_out ? row('mdi:heat-pump-outline', this.t('hp_out'), this._n(c.hp_out)) : null,
+        c.dhw_tank ? row('mdi:water-thermometer', this.t('tank'), this._n(c.dhw_tank)) : null,
+        row('mdi:home-thermometer-outline', this.t('outdoor'), this._outdoor()),
+        c.room ? row('mdi:sofa-outline', this.t('room'), this._n(c.room)) : null
+      ].filter(Boolean);
+      var sets = [
+        c.water_target ? row('mdi:radiator', this.t('hp_heat'), this._targetVal(c.water_target)) : null,
+        c.water_target_cool ? row('mdi:snowflake', this.t('water_cool'), this._targetVal(c.water_target_cool)) : null,
+        c.dhw_target ? row('mdi:water-boiler', this.t('dhw'), this._targetVal(c.dhw_target), 0) : null
+      ].filter(Boolean);
+      return {
+        title: this.t('temps'),
+        sections: [this._shSec(this.t('temps'), 'mdi:thermometer-lines', temps, 2), this._shSec(this.t('setpoints'), 'mdi:target', sets, sets.length > 2 ? 3 : 2)]
+      };
     }
     _sh_hp() {
       var c = this._c._hp, self = this;
@@ -2151,6 +2186,7 @@
       entities: 'Climate entities',
       mode_heat: 'Option for “Heating”', mode_cool: 'Option for “Cooling”', mode_dhw: 'Option for “Hot water”', mode_auto: 'Option for “Auto”',
       mode_heat_dhw: 'Option for “Heat + hot water”', mode_cool_dhw: 'Option for “Cool + hot water”',
+      hp_out: 'Heat pump outlet temperature', room: 'Room temperature',
       ewpe_hp: 'Take entities from EWPE HP', water_target_cool: 'Cooling water target (number)', error: 'Error (code sensor or binary sensor)', heaters: 'Electric heaters (binary sensors)',
       water_target: 'Heating water target (number / water_heater)', dhw_target: 'Hot water target (number / water_heater)',
       water_out: 'Flow water temperature', water_in: 'Return water temperature', dhw_tank: 'DHW tank temperature',
@@ -2184,6 +2220,7 @@
       entities: 'Сущности climate',
       mode_heat: 'Опция для «Отопление»', mode_cool: 'Опция для «Охлаждение»', mode_dhw: 'Опция для «Горячая вода»', mode_auto: 'Опция для «Авто»',
       mode_heat_dhw: 'Опция для «Отопление + ГВС»', mode_cool_dhw: 'Опция для «Охлаждение + ГВС»',
+      hp_out: 'Температура на выходе насоса', room: 'Температура в комнате',
       ewpe_hp: 'Взять сущности из EWPE HP', water_target_cool: 'Уставка воды охлаждения (number)', error: 'Ошибка (сенсор кода или бинарный)', heaters: 'Электронагреватели (бинарные сенсоры)',
       water_target: 'Уставка воды отопления (number / water_heater)', dhw_target: 'Уставка ГВС (number / water_heater)',
       water_out: 'Температура подачи', water_in: 'Температура обратки', dhw_tank: 'Температура бака ГВС',
@@ -2217,6 +2254,7 @@
       entities: 'Climate entītijas',
       mode_heat: 'Opcija “Apkure”', mode_cool: 'Opcija “Dzesēšana”', mode_dhw: 'Opcija “Karstais ūdens”', mode_auto: 'Opcija “Auto”',
       mode_heat_dhw: 'Opcija “Apkure + KŪ”', mode_cool_dhw: 'Opcija “Dzesēšana + KŪ”',
+      hp_out: 'Sūkņa izejas temperatūra', room: 'Telpas temperatūra',
       ewpe_hp: 'Ņemt entītijas no EWPE HP', water_target_cool: 'Dzesēšanas ūdens iestatījums (number)', error: 'Kļūda (koda vai binārais sensors)', heaters: 'Elektriskie sildītāji (binārie sensori)',
       water_target: 'Apkures ūdens iestatījums (number / water_heater)', dhw_target: 'KŪ iestatījums (number / water_heater)',
       water_out: 'Turpgaitas temperatūra', water_in: 'Atgaitas temperatūra', dhw_tank: 'KŪ tvertnes temperatūra',
@@ -2240,7 +2278,7 @@
       theme_entity: 'Without helpers the choice made on the panel is stored in the browser of that device.',
       mode_protection: 'Leave empty for auto-detection by option name.',
       mode_heat: 'Leave empty for auto-detection by option name.',
-      ewpe_hp: 'For GREE Versati with the EWPE HP integration: every field left empty is filled from it.'
+      ewpe_hp: 'For GREE Versati with the EWPE HP integration: every field left empty is filled from it. Without any entity of its own the heat pump section uses EWPE HP anyway.'
     },
     ru: {
       device: 'NSPanel: фиксированная раскладка 480×480, масштабируется под экран. Телефон: вертикальная раскладка с прокруткой.',
@@ -2251,7 +2289,7 @@
       theme_entity: 'Без хелперов выбор, сделанный на панели, хранится в браузере этого устройства.',
       mode_protection: 'Оставьте пустым — режим определится по названию опции.',
       mode_heat: 'Оставьте пустым — режим определится по названию опции.',
-      ewpe_hp: 'Для GREE Versati с интеграцией EWPE HP: все незаполненные поля берутся из неё.'
+      ewpe_hp: 'Для GREE Versati с интеграцией EWPE HP: все незаполненные поля берутся из неё. Если в разделе не выбрано ни одной сущности, EWPE HP используется и без этого.'
     },
     lv: {
       device: 'NSPanel: fiksēts 480×480 izkārtojums, mērogots ekrānam. Telefons: vertikāls izkārtojums ar ritināšanu.',
@@ -2262,7 +2300,7 @@
       theme_entity: 'Bez palīgiem panelī izdarītā izvēle tiek saglabāta šīs ierīces pārlūkā.',
       mode_protection: 'Atstājiet tukšu automātiskai noteikšanai pēc opcijas nosaukuma.',
       mode_heat: 'Atstājiet tukšu automātiskai noteikšanai pēc opcijas nosaukuma.',
-      ewpe_hp: 'GREE Versati ar EWPE HP integrāciju: visi tukšie lauki tiek aizpildīti no tās.'
+      ewpe_hp: 'GREE Versati ar EWPE HP integrāciju: visi tukšie lauki tiek aizpildīti no tās. Ja sadaļā nav izvēlēta neviena entītija, EWPE HP tiek izmantots arī bez šī.'
     }
   };
 
@@ -2480,6 +2518,7 @@
           G([E('power', ['switch', 'input_boolean']), E('mode', ['select', 'input_select']),
             E('water_target', ['number', 'input_number', 'water_heater', 'climate']), E('water_target_cool', ['number', 'input_number']),
             E('dhw_target', ['number', 'input_number', 'water_heater', 'climate']), E('error', ['sensor', 'binary_sensor']),
+            E('hp_out', SENS), E('room', SENS),
             E('water_out', SENS), E('water_in', SENS), E('dhw_tank', SENS), E('outdoor', SENS),
             E('compressor', SENS), E('electric_power', SENS), E('cop', SENS), E('energy_today', SENS),
             E('status', ['sensor', 'select', 'input_select']), E('quiet', ['switch', 'input_boolean']),

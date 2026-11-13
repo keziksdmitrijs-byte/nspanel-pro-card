@@ -125,7 +125,7 @@ use `switches:` to list your own.
 | Option | Description |
 |---|---|
 | `enabled`, `name` | |
-| `ewpe_hp` | `true` for a GREE Versati with the [EWPE HP](https://github.com/keziksdmitrijs-byte/ewpe-hp) integration: every field left empty is taken from it. With several units, the unit's name instead of `true` |
+| `ewpe_hp` | `true` for a GREE Versati with the [EWPE HP](https://github.com/keziksdmitrijs-byte/ewpe-hp) integration: every field left empty is taken from it. With several units, the unit's name instead of `true`. A heat pump section without any entity of its own uses EWPE HP anyway, so `heat_pump: { enabled: true }` is enough |
 | `power` | `switch` / `input_boolean` |
 | `mode` | `select` / `input_select`; `mode_heat`, `mode_heat_dhw`, `mode_dhw`, `mode_cool_dhw`, `mode_cool`, `mode_auto` map options to buttons (empty = auto-detect; “heat + hot water” and “cool + hot water” are recognised as their own modes) |
 | `status` | Optional sensor/select with the current state (heating, cooling, DHW, idle, off). Without it the state is derived from mode and compressor |
@@ -133,6 +133,7 @@ use `switches:` to list your own.
 | `water_target_cool` | Cooling water set point, shown instead of `water_target` in the cooling modes |
 | `error` | Error code sensor (0 = none) or binary sensor: shown in the header and on the home tile |
 | `heaters` | Electric heater binary sensors: how many are running |
+| `hp_out`, `room` | Heat pump outlet and room temperatures, shown in the temperatures pop-up (tap the *Return* tile) |
 | `water_out`, `water_in`, `dhw_tank`, `outdoor` | Temperatures (`outdoor` falls back to the weather entity) |
 | `compressor`, `electric_power`, `cop`, `energy_today` | Compressor frequency, electric power (W or kW), COP, energy today |
 | `quiet`, `weather_comp`, `dhw_boost` | Switches shown as toggle buttons |
@@ -220,7 +221,8 @@ A list of extra tiles (the visual editor offers two; YAML allows more).
 - Кондиционер: отдельные кнопки «Режим работы», «Вентилятор», «Жалюзи», «Функции».
 - Тепловой насос: двойное кольцо — температура подачи и температура воды в бойлере. Для GREE Versati с интеграцией
   [EWPE HP](https://github.com/keziksdmitrijs-byte/ewpe-hp) достаточно `ewpe_hp: true`: все сущности, режимы «Отопление + ГВС»
-  и «Охлаждение + ГВС», уставка воды охлаждения, код ошибки и электронагреватели подхватываются сами.
+  и «Охлаждение + ГВС», уставка воды охлаждения, код ошибки и электронагреватели подхватываются сами (если в разделе не выбрано
+  ни одной сущности, хватает и `enabled: true`). Нажатие на плитку «Обратка» открывает окно со всеми температурами и уставками.
 - Заставка-часы: после бездействия — чёрный экран с крупными часами, датой и погодой; просыпается от касания, при включении экрана
   или при изменении указанных сущностей (например, события приближения из NSPanel Pro Tools).
 - Визуальный редактор с подписями на русском, латышском и английском.
