@@ -1,5 +1,5 @@
 /*!
- * NSPanel Pro Card v1.5.1
+ * NSPanel Pro Card v1.6.0
  * Full-screen smart-home panel for Home Assistant — Sonoff NSPanel Pro (480×480) or phone.
  * Clock + weather start screen, settings menu (theme / language / accent colour),
  * recuperator, air conditioner(s), heat pump, solar inverter and custom buttons.
@@ -8,7 +8,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.5.1';
+  var VERSION = '1.6.0';
   var CARD = 'nspanel-pro-card';
   var EDITOR = 'nspanel-pro-card-editor';
 
@@ -70,6 +70,7 @@
       swing_off: 'Выкл', swing_on: 'Вкл', swing_vertical: 'Вертикально', swing_horizontal: 'Горизонтально', swing_both: 'Оба',
       x_quiet_mode: 'Тихий', x_xtra_fan: 'Доп. вент.', x_fresh_air: 'Свежий возд.', x_panel_light: 'Подсветка',
       hp_heat: 'Отопление', hp_cool: 'Охлаждение', hp_dhw: 'Горячая вода', hp_auto: 'Авто',
+      hp_heat_dhw: 'Отопление + ГВС', hp_cool_dhw: 'Охлаждение + ГВС', heaters: 'Электронагрев', hp_error: 'Ошибка',
       st_off: 'Выключен', st_idle: 'Ожидание', st_heat: 'Нагрев', st_cool: 'Охлаждение', st_dhw: 'Нагрев ГВС',
       dhw: 'ГВС', flow: 'Подача', ret: 'Обратка', tank: 'Бак ГВС', compressor: 'Компрессор', power: 'Мощность',
       heat_out: 'Тепло', cop: 'COP', today: 'Сегодня', quiet: 'Тихий', weather_comp: 'Погодозав.',
@@ -112,6 +113,7 @@
       swing_off: 'Izsl.', swing_on: 'Iesl.', swing_vertical: 'Vertikāli', swing_horizontal: 'Horizontāli', swing_both: 'Abi',
       x_quiet_mode: 'Klusais', x_xtra_fan: 'Papildu vent.', x_fresh_air: 'Svaigs gaiss', x_panel_light: 'Displejs',
       hp_heat: 'Apkure', hp_cool: 'Dzesēšana', hp_dhw: 'Karstais ūdens', hp_auto: 'Auto',
+      hp_heat_dhw: 'Apkure + KŪ', hp_cool_dhw: 'Dzesēšana + KŪ', heaters: 'Elektriskā sildīšana', hp_error: 'Kļūda',
       st_off: 'Izslēgts', st_idle: 'Gaidīšana', st_heat: 'Sildīšana', st_cool: 'Dzesēšana', st_dhw: 'KŪ sildīšana',
       dhw: 'KŪ', flow: 'Turpgaita', ret: 'Atgaita', tank: 'KŪ tvertne', compressor: 'Kompresors', power: 'Jauda',
       heat_out: 'Siltums', cop: 'COP', today: 'Šodien', quiet: 'Klusais', weather_comp: 'Laika līkne',
@@ -154,6 +156,7 @@
       swing_off: 'Off', swing_on: 'On', swing_vertical: 'Vertical', swing_horizontal: 'Horizontal', swing_both: 'Both',
       x_quiet_mode: 'Quiet', x_xtra_fan: 'Xtra fan', x_fresh_air: 'Fresh air', x_panel_light: 'Display',
       hp_heat: 'Heating', hp_cool: 'Cooling', hp_dhw: 'Hot water', hp_auto: 'Auto',
+      hp_heat_dhw: 'Heat + hot water', hp_cool_dhw: 'Cool + hot water', heaters: 'Electric heating', hp_error: 'Error',
       st_off: 'Off', st_idle: 'Idle', st_heat: 'Heating', st_cool: 'Cooling', st_dhw: 'Heating DHW',
       dhw: 'DHW', flow: 'Flow', ret: 'Return', tank: 'DHW tank', compressor: 'Compressor', power: 'Power',
       heat_out: 'Heat', cop: 'COP', today: 'Today', quiet: 'Quiet', weather_comp: 'Weather comp.',
@@ -178,12 +181,56 @@
     ['comfort', /комфорт|komfort|normāl|normal|comfort/i],
     ['boost', /интенсив|intens|boost/i]
   ];
+  /* matched in this order, so that a combined mode is not taken for one of its halves */
   var HP_MODES = [
+    ['heat_dhw', /heat\w*[ _+&/-]*(hot.?water|dhw)|отоп\S*\s*\+\s*гвс|apkur\S*\s*\+\s*k/i, 'mdi:home-thermometer-outline'],
+    ['cool_dhw', /cool\w*[ _+&/-]*(hot.?water|dhw)|охлаж\S*\s*\+\s*гвс|dzes\S*\s*\+\s*k/i, 'mdi:snowflake-thermometer'],
     ['heat', /^heat$|heating|отоп|нагрев|apkur|sild/i, 'mdi:radiator'],
     ['cool', /^cool$|cooling|охлаж|dzes/i, 'mdi:snowflake'],
     ['dhw', /^dhw$|гвс|hot.?water|water|ūden|бойлер|boiler/i, 'mdi:water-boiler'],
     ['auto', /^auto$|авто|automatic/i, 'mdi:thermostat-auto']
   ];
+  var HP_ORDER = ['heat', 'heat_dhw', 'dhw', 'cool_dhw', 'cool', 'auto'];
+  var HP_COOLING = { cool: 1, cool_dhw: 1 };
+
+  /* EWPE HP (GREE Versati through the Gree+ cloud): card field <- entity translation key */
+  var EWPE = {
+    power: ['switch', 'power'], mode: ['select', 'mode'], water_target: ['number', 'heating_water_setpoint'],
+    water_target_cool: ['number', 'cooling_water_setpoint'], dhw_target: ['water_heater', 'tank'],
+    water_out: ['sensor', 'water_outlet'], water_in: ['sensor', 'water_inlet'], dhw_tank: ['sensor', 'tank_temperature'],
+    quiet: ['switch', 'quiet'], dhw_boost: ['switch', 'fast_hot_water'], error: ['sensor', 'error_code']
+  };
+  var EWPE_HEATERS = ['tank_heater', 'heater_1', 'heater_2'];
+  /* the entities of one EWPE HP unit, by card field; the first unit unless one is named */
+  function ewpeFields(hass, unit) {
+    var reg = hass && hass.entities;
+    if (!reg) return null;
+    var mine = Object.keys(reg).filter(function (e) { return reg[e].platform === 'ewpe_hp'; });
+    var devices = [];
+    mine.forEach(function (e) {
+      var r = reg[e];
+      if (r.translation_key === 'mode' && devices.indexOf(r.device_id) < 0) devices.push(r.device_id);
+    });
+    if (!devices.length) return null;
+    var dev = devices[0];
+    if (typeof unit === 'string' && unit) {
+      var named = devices.filter(function (d) {
+        var dv = hass.devices && hass.devices[d];
+        return dv && (dv.name_by_user === unit || dv.name === unit || d === unit);
+      })[0];
+      if (named) dev = named;
+    }
+    var out = {}, heaters = [];
+    mine.forEach(function (e) {
+      var r = reg[e];
+      if (r.device_id !== dev) return;
+      var dom = e.split('.')[0];
+      Object.keys(EWPE).forEach(function (k) { if (EWPE[k][0] === dom && EWPE[k][1] === r.translation_key) out[k] = e; });
+      if (dom === 'binary_sensor' && EWPE_HEATERS.indexOf(r.translation_key) >= 0) heaters.push(e);
+    });
+    if (heaters.length) out.heaters = heaters.sort();
+    return out;
+  }
   var HP_STATUS = [
     ['off', /^off$|выкл|izsl/i],
     ['dhw', /dhw|гвс|hot.?water|ūden|boiler|бойлер/i],
@@ -622,7 +669,7 @@
         weather: weather || '',
         recuperator: { enabled: false },
         air_conditioner: { enabled: climates.length > 0, entities: climates },
-        heat_pump: { enabled: false },
+        heat_pump: ewpeFields(hass) ? { enabled: true, ewpe_hp: true } : { enabled: false },
         solar: { enabled: false }
       };
     }
@@ -643,8 +690,29 @@
       var nestKey = this._nestType() ? 'nest|' + (this._c._rec.unit || '') : '';
       if (nestKey !== this._nestKey) { this._nestUnsub(); this._nestKey = nestKey; this._nestData = null; }
       if (this._hass) this._nestSubscribe();
+      this._ewpeKey = null;
+      this._hpBase = this._c._hp;
+      if (this._hass) this._ewpe();
       if (['home', 'menu', 'weather', 'rec', 'ac', 'hp', 'solar'].indexOf(this._page) < 0) this._page = 'home';
       if (this._hass && this._pageEl) this._render(true);
+    }
+
+    /* heat_pump.ewpe_hp: fields left empty are taken from the EWPE HP integration */
+    _ewpe() {
+      var base = this._hpBase;
+      if (!base || !base.ewpe_hp) return;
+      var found = ewpeFields(this._hass, base.ewpe_hp);
+      var key = JSON.stringify(found);
+      if (key === this._ewpeKey) return;
+      this._ewpeKey = key;
+      var hp = Object.assign({}, found || {});
+      Object.keys(base).forEach(function (k) { if (base[k] !== '' && base[k] !== null && base[k] !== undefined) hp[k] = base[k]; });
+      this._c._hp = hp;
+      var watch = {};
+      this._watch.forEach(function (e) { watch[e] = 1; });
+      collectEntities(found || {}, watch);
+      this._watch = Object.keys(watch);
+      this._sig = '';
     }
 
     getCardSize() { return 12; }
@@ -656,6 +724,7 @@
       if (!this._pageEl) this._build();
       if (first) { this._subscribeForecast(); this._nestSubscribe(); }
       if (this._wall) this._wall.hass = hass;
+      this._ewpe();
       var sig = this._signature();
       if (sig !== this._sig) { this._sig = sig; this._render(); }
       this._checkWake();
@@ -1624,15 +1693,33 @@
     _hpModes() {
       var c = this._c._hp, s = this._st(c.mode);
       var opts = s && s.attributes.options ? s.attributes.options : [];
-      var out = [];
+      var found = {}, taken = {};
       HP_MODES.forEach(function (m) {
         var opt = c['mode_' + m[0]];
-        if (!opt) {
-          for (var j = 0; j < opts.length; j++) { if (m[1].test(opts[j])) { opt = opts[j]; break; } }
-        }
-        if (opt && (!opts.length || opts.indexOf(opt) >= 0)) out.push({ key: m[0], option: opt, icon: m[2] });
+        if (opt) { found[m[0]] = { key: m[0], option: opt, icon: m[2] }; taken[opt] = 1; }
       });
-      return out;
+      /* each remaining option goes to the first mode that matches it */
+      opts.forEach(function (o) {
+        if (taken[o]) return;
+        for (var j = 0; j < HP_MODES.length; j++) {
+          var m = HP_MODES[j];
+          if (!found[m[0]] && m[1].test(o)) { found[m[0]] = { key: m[0], option: o, icon: m[2] }; taken[o] = 1; return; }
+        }
+      });
+      return HP_ORDER.map(function (k) { return found[k]; })
+        .filter(function (m) { return m && (!opts.length || opts.indexOf(m.option) >= 0); });
+    }
+    _hpWaterTarget(mode) {
+      var c = this._c._hp;
+      return HP_COOLING[mode] && c.water_target_cool ? c.water_target_cool : c.water_target;
+    }
+    _hpError() {
+      var c = this._c._hp, s = this._st(c.error);
+      if (!this._ok(s)) return null;
+      if (c.error.split('.')[0] === 'binary_sensor') return s.state === 'on' ? this.t('hp_error') : null;
+      var v = parseFloat(s.state);
+      if (!isNaN(v)) return v > 0 ? this.t('hp_error') + ' ' + s.state : null;
+      return /^(0|ok|none|no|нет|nav)$/i.test(s.state) ? null : s.state;
     }
     _hpInfo() {
       var c = this._c._hp;
@@ -1649,7 +1736,7 @@
         for (var i = 0; i < HP_STATUS.length; i++) if (HP_STATUS[i][1].test(raw)) { status = HP_STATUS[i][0]; break; }
       }
       if (!status && !raw) {
-        status = !on ? 'off' : (isNaN(hz) || hz > 0) ? (mode === 'cool' ? 'cool' : mode === 'dhw' ? 'dhw' : 'heat') : 'idle';
+        status = !on ? 'off' : (isNaN(hz) || hz > 0) ? (HP_COOLING[mode] ? 'cool' : mode === 'dhw' ? 'dhw' : 'heat') : 'idle';
       }
       return { on: on, mode: mode, status: status, raw: raw, hz: hz, modes: modes };
     }
@@ -1670,6 +1757,8 @@
       var c = this._c._hp, i = this._hpInfo();
       var st = i.status ? this.t('st_' + i.status) : i.raw;
       if (i.on && c.cop && !isNaN(this._n(c.cop))) st += ' · ' + this.t('cop') + ' ' + this._num(this._n(c.cop), 1);
+      var err = this._hpError();
+      if (err) st = '⚠ ' + err;
       var wv = this._n(c.water_out);
       return this._tile('nav', 'mdi:heat-pump-outline', c.name || this.t('heatpump'), st,
         isNaN(wv) ? '' : this._num(wv, 1) + '<small>°C</small>', i.on, { p: 'hp' });
@@ -1679,7 +1768,9 @@
       if (!c) return this._p_home();
       var i = this._hpInfo();
       var stTxt = i.status ? this.t('st_' + i.status) : i.raw;
-      var hdr = this._hdr(c.name || this.t('heatpump'), stTxt, { power: c.power ? { on: i.on, a: 'hp_power' } : null });
+      var err = this._hpError();
+      var hdr = this._hdr(c.name || this.t('heatpump'), err ? '⚠ ' + err : stTxt,
+        { power: c.power ? { on: i.on, a: 'hp_power' } : null, subErr: !!err });
       var scol = { heat: COL.heat, cool: COL.cool, dhw: COL.dhw, idle: 'var(--tx3)', off: 'var(--tx3)' }[i.status] || 'var(--accent)';
       var sicon = { heat: 'mdi:fire', cool: 'mdi:snowflake', dhw: 'mdi:water-boiler', idle: 'mdi:pause-circle-outline', off: 'mdi:power' }[i.status] || 'mdi:heat-pump-outline';
       var wout = this._n(c.water_out);
@@ -1701,9 +1792,10 @@
 
       var wc = c.weather_comp ? this._isOn(c.weather_comp) : false;
       var steppers = [];
-      if (c.water_target) {
-        var wt = this._pv(c.water_target, this._targetVal(c.water_target));
-        steppers.push(this._stepper(i.mode === 'cool' ? this.t('hp_cool') : this.t('hp_heat'), i.mode === 'cool' ? 'mdi:snowflake' : 'mdi:radiator',
+      var wtE = this._hpWaterTarget(i.mode);
+      if (wtE) {
+        var wt = this._pv(wtE, this._targetVal(wtE));
+        steppers.push(this._stepper(HP_COOLING[i.mode] ? this.t('hp_cool') : this.t('hp_heat'), HP_COOLING[i.mode] ? 'mdi:snowflake' : 'mdi:radiator',
           this._num(wt, 1) + '<small>°C</small>', 'hp_t', 'w', { small: true, note: wc ? this.t('curve') : '' }));
       }
       if (c.dhw_target) {
@@ -1738,6 +1830,10 @@
       if (c.cop) out.push(['mdi:gauge', this.t('cop'), this._num(cop, 1), '']);
       if (c.water_in) out.push(['mdi:thermometer-chevron-down', this.t('ret'), this._num(this._n(c.water_in), 1), '°C']);
       if (c.compressor) out.push(['mdi:sine-wave', this.t('compressor'), this._num(i.hz, 0), this.t('u_hz')]);
+      if (c.heaters && c.heaters.length) {
+        var self2 = this, onH = c.heaters.filter(function (e) { return self2._isOn(e); }).length;
+        out.push(['mdi:heating-coil', this.t('heaters'), onH ? (c.heaters.length > 1 ? onH + '/' + c.heaters.length : this.t('on')) : this.t('off'), '']);
+      }
       if (c.electric_power && c.cop) out.push(['mdi:fire', this.t('heat_out'), this._num(pkw * cop, 1), this.t('u_kw')]);
       if (c.energy_today) out.push(['mdi:counter', this.t('today'), this._num(toKwh(this._st(c.energy_today)), 1), this.t('u_kwh')]);
       return out;
@@ -2013,7 +2109,7 @@
         }
         case 'hp_t': {
           var hp2 = c._hp;
-          var eid = d('k2') === 'w' ? hp2.water_target : hp2.dhw_target;
+          var eid = d('k2') === 'w' ? this._hpWaterTarget(this._hpInfo().mode) : hp2.dhw_target;
           var es = this._st(eid);
           if (!es) return;
           var stp = d('k2') === 'w' ? (Number(hp2.water_step) || 0.5) : (Number(hp2.dhw_step) || 1);
@@ -2054,6 +2150,8 @@
       mode_protection: 'Option for “Protection”', mode_economy: 'Option for “Economy”', mode_comfort: 'Option for “Comfort”', mode_boost: 'Option for “Boost”',
       entities: 'Climate entities',
       mode_heat: 'Option for “Heating”', mode_cool: 'Option for “Cooling”', mode_dhw: 'Option for “Hot water”', mode_auto: 'Option for “Auto”',
+      mode_heat_dhw: 'Option for “Heat + hot water”', mode_cool_dhw: 'Option for “Cool + hot water”',
+      ewpe_hp: 'Take entities from EWPE HP', water_target_cool: 'Cooling water target (number)', error: 'Error (code sensor or binary sensor)', heaters: 'Electric heaters (binary sensors)',
       water_target: 'Heating water target (number / water_heater)', dhw_target: 'Hot water target (number / water_heater)',
       water_out: 'Flow water temperature', water_in: 'Return water temperature', dhw_tank: 'DHW tank temperature',
       compressor: 'Compressor frequency', electric_power: 'Electric power (W or kW)', cop: 'COP', energy_today: 'Energy today',
@@ -2085,6 +2183,8 @@
       mode_protection: 'Опция для «Защита»', mode_economy: 'Опция для «Эконом»', mode_comfort: 'Опция для «Комфорт»', mode_boost: 'Опция для «Интенсив»',
       entities: 'Сущности climate',
       mode_heat: 'Опция для «Отопление»', mode_cool: 'Опция для «Охлаждение»', mode_dhw: 'Опция для «Горячая вода»', mode_auto: 'Опция для «Авто»',
+      mode_heat_dhw: 'Опция для «Отопление + ГВС»', mode_cool_dhw: 'Опция для «Охлаждение + ГВС»',
+      ewpe_hp: 'Взять сущности из EWPE HP', water_target_cool: 'Уставка воды охлаждения (number)', error: 'Ошибка (сенсор кода или бинарный)', heaters: 'Электронагреватели (бинарные сенсоры)',
       water_target: 'Уставка воды отопления (number / water_heater)', dhw_target: 'Уставка ГВС (number / water_heater)',
       water_out: 'Температура подачи', water_in: 'Температура обратки', dhw_tank: 'Температура бака ГВС',
       compressor: 'Частота компрессора', electric_power: 'Потребляемая мощность (W или kW)', cop: 'COP', energy_today: 'Энергия за сегодня',
@@ -2116,6 +2216,8 @@
       mode_protection: 'Opcija “Aizsardzība”', mode_economy: 'Opcija “Ekonomija”', mode_comfort: 'Opcija “Komforts”', mode_boost: 'Opcija “Intensīvs”',
       entities: 'Climate entītijas',
       mode_heat: 'Opcija “Apkure”', mode_cool: 'Opcija “Dzesēšana”', mode_dhw: 'Opcija “Karstais ūdens”', mode_auto: 'Opcija “Auto”',
+      mode_heat_dhw: 'Opcija “Apkure + KŪ”', mode_cool_dhw: 'Opcija “Dzesēšana + KŪ”',
+      ewpe_hp: 'Ņemt entītijas no EWPE HP', water_target_cool: 'Dzesēšanas ūdens iestatījums (number)', error: 'Kļūda (koda vai binārais sensors)', heaters: 'Elektriskie sildītāji (binārie sensori)',
       water_target: 'Apkures ūdens iestatījums (number / water_heater)', dhw_target: 'KŪ iestatījums (number / water_heater)',
       water_out: 'Turpgaitas temperatūra', water_in: 'Atgaitas temperatūra', dhw_tank: 'KŪ tvertnes temperatūra',
       compressor: 'Kompresora frekvence', electric_power: 'Elektriskā jauda (W vai kW)', cop: 'COP', energy_today: 'Enerģija šodien',
@@ -2137,7 +2239,8 @@
       grid_invert: 'Card expects + = import from grid. Enable if your inverter reports + when exporting.',
       theme_entity: 'Without helpers the choice made on the panel is stored in the browser of that device.',
       mode_protection: 'Leave empty for auto-detection by option name.',
-      mode_heat: 'Leave empty for auto-detection by option name.'
+      mode_heat: 'Leave empty for auto-detection by option name.',
+      ewpe_hp: 'For GREE Versati with the EWPE HP integration: every field left empty is filled from it.'
     },
     ru: {
       device: 'NSPanel: фиксированная раскладка 480×480, масштабируется под экран. Телефон: вертикальная раскладка с прокруткой.',
@@ -2147,7 +2250,8 @@
       grid_invert: 'Карточка ожидает «+» = импорт из сети. Включите, если инвертор показывает «+» при экспорте.',
       theme_entity: 'Без хелперов выбор, сделанный на панели, хранится в браузере этого устройства.',
       mode_protection: 'Оставьте пустым — режим определится по названию опции.',
-      mode_heat: 'Оставьте пустым — режим определится по названию опции.'
+      mode_heat: 'Оставьте пустым — режим определится по названию опции.',
+      ewpe_hp: 'Для GREE Versati с интеграцией EWPE HP: все незаполненные поля берутся из неё.'
     },
     lv: {
       device: 'NSPanel: fiksēts 480×480 izkārtojums, mērogots ekrānam. Telefons: vertikāls izkārtojums ar ritināšanu.',
@@ -2157,7 +2261,8 @@
       grid_invert: 'Kartīte sagaida “+” = imports no tīkla. Ieslēdziet, ja invertors rāda “+” eksporta laikā.',
       theme_entity: 'Bez palīgiem panelī izdarītā izvēle tiek saglabāta šīs ierīces pārlūkā.',
       mode_protection: 'Atstājiet tukšu automātiskai noteikšanai pēc opcijas nosaukuma.',
-      mode_heat: 'Atstājiet tukšu automātiskai noteikšanai pēc opcijas nosaukuma.'
+      mode_heat: 'Atstājiet tukšu automātiskai noteikšanai pēc opcijas nosaukuma.',
+      ewpe_hp: 'GREE Versati ar EWPE HP integrāciju: visi tukšie lauki tiek aizpildīti no tās.'
     }
   };
 
@@ -2371,15 +2476,17 @@
         ]),
         sec('air_conditioner', 'mdi:air-conditioner', [TX('name'), E('entities', 'climate', true)]),
         sec('heat_pump', 'mdi:heat-pump-outline', [
-          TX('name'),
+          TX('name'), B('ewpe_hp'),
           G([E('power', ['switch', 'input_boolean']), E('mode', ['select', 'input_select']),
-            E('water_target', ['number', 'input_number', 'water_heater', 'climate']), E('dhw_target', ['number', 'input_number', 'water_heater', 'climate']),
+            E('water_target', ['number', 'input_number', 'water_heater', 'climate']), E('water_target_cool', ['number', 'input_number']),
+            E('dhw_target', ['number', 'input_number', 'water_heater', 'climate']), E('error', ['sensor', 'binary_sensor']),
             E('water_out', SENS), E('water_in', SENS), E('dhw_tank', SENS), E('outdoor', SENS),
             E('compressor', SENS), E('electric_power', SENS), E('cop', SENS), E('energy_today', SENS),
             E('status', ['sensor', 'select', 'input_select']), E('quiet', ['switch', 'input_boolean']),
             E('weather_comp', ['switch', 'input_boolean']), E('dhw_boost', ['switch', 'input_boolean'])]),
-          sub('sec_hp_modes', 'mdi:format-list-bulleted', [G([OPT('mode_heat', hp.mode), OPT('mode_cool', hp.mode),
-            OPT('mode_dhw', hp.mode), OPT('mode_auto', hp.mode)])])
+          E('heaters', 'binary_sensor', true),
+          sub('sec_hp_modes', 'mdi:format-list-bulleted', [G([OPT('mode_heat', hp.mode), OPT('mode_heat_dhw', hp.mode),
+            OPT('mode_dhw', hp.mode), OPT('mode_cool_dhw', hp.mode), OPT('mode_cool', hp.mode), OPT('mode_auto', hp.mode)])])
         ]),
         sec('solar', 'mdi:solar-power-variant', [
           TX('name'),
