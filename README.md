@@ -22,7 +22,7 @@ recuperator (MVHR ventilation), air conditioners, a heat pump, a solar inverter,
 - **Clean device pages** — the main value is shown in a big ring, set points have large − / + buttons, and choices live in pop-up menus instead of rows of buttons.
 - **Recuperator** — two types. **Nest new** hosts the NEST NSPanel panel of the [AlpicAir NEST](https://github.com/keziksdmitrijs-byte/ha-alpicair-nest) integration right in the card: fan speed in a big ring with − / +, modes, temperature, schedule and every setting, with no entities to pick. **Nest** (the default) is a four-block layout: top left a big **airflow** ring (% and m³/h, optional − / + to change the fan level), top right the **supply air temperature** and the **target temperature**, bottom the **operating mode** button (protection / economy / comfort / boost, night cooling) and the **data** button (all temperatures, recovery, fans, filter, status, errors).
 - **Air conditioners** — any number of `climate` entities with a unit switcher; four separate buttons open pop-up menus for **operating mode** (with presets), **fan**, **swing** and **functions** (Gree quiet / xtra fan / fresh air / display are detected automatically).
-- **Heat pump** — a **double ring** shows the flow temperature (outer) and the DHW boiler temperature (inner); heating and DHW set points, modes (heating / heat + hot water / hot water / cool + hot water / cooling / auto) and quiet / weather-compensation / DHW-boost in one pop-up menu, power, COP, error code, electric heaters and other readings in large tiles. A GREE Versati with the EWPE HP integration is set up with one option.
+- **Heat pump** (GREE Versati data set, as the [EWPE HP](https://github.com/keziksdmitrijs-byte/ewpe-hp) integration gives it) — a **double ring** with the flow (outer) and DHW boiler (inner) temperatures, heating and DHW set points with − / +, a mode button (heating / heat + hot water / hot water / cool + hot water / cooling, quiet, fast hot water), and three tiles: outdoor, return — tap it for all temperatures and set points — and electric heating. The error code shows in the header. With EWPE HP installed nothing has to be chosen.
 - **Solar inverter** — animated power-flow diagram (PV, battery with SoC ring, grid, home) and today's produced / imported / exported energy and self-use. W/kW and Wh/kWh are converted automatically.
 - **Visual editor** — everything can be configured in the UI card editor (labels in English, Russian and Latvian).
 - Returns to the start screen after a configurable idle time.
@@ -127,16 +127,14 @@ use `switches:` to list your own.
 | `enabled`, `name` | |
 | `ewpe_hp` | `true` for a GREE Versati with the [EWPE HP](https://github.com/keziksdmitrijs-byte/ewpe-hp) integration: every field left empty is taken from it. With several units, the unit's name instead of `true`. A heat pump section without any entity of its own uses EWPE HP anyway, so `heat_pump: { enabled: true }` is enough |
 | `power` | `switch` / `input_boolean` |
-| `mode` | `select` / `input_select`; `mode_heat`, `mode_heat_dhw`, `mode_dhw`, `mode_cool_dhw`, `mode_cool`, `mode_auto` map options to buttons (empty = auto-detect; “heat + hot water” and “cool + hot water” are recognised as their own modes) |
-| `status` | Optional sensor/select with the current state (heating, cooling, DHW, idle, off). Without it the state is derived from mode and compressor |
+| `mode` | `select` / `input_select`; `mode_heat`, `mode_heat_dhw`, `mode_dhw`, `mode_cool_dhw`, `mode_cool` map options to buttons (empty = auto-detect from option names such as `heat`, `heat_hot_water`, `hot_water`, `cool_hot_water`, `cool`) |
 | `water_target`, `dhw_target` | Set points: `number`, `input_number`, `water_heater` or `climate` (`water_step`, `dhw_step` change the +/- step) |
 | `water_target_cool` | Cooling water set point, shown instead of `water_target` in the cooling modes |
 | `error` | Error code sensor (0 = none) or binary sensor: shown in the header and on the home tile |
-| `heaters` | Electric heater binary sensors: how many are running |
+| `heaters` | Electric heaters (`binary_sensor` / `input_boolean`): how many are running |
 | `hp_out`, `room` | Heat pump outlet and room temperatures, shown in the temperatures pop-up (tap the *Return* tile) |
 | `water_out`, `water_in`, `dhw_tank`, `outdoor` | Temperatures (`outdoor` falls back to the weather entity) |
-| `compressor`, `electric_power`, `cop`, `energy_today` | Compressor frequency, electric power (W or kW), COP, energy today |
-| `quiet`, `weather_comp`, `dhw_boost` | Switches shown as toggle buttons |
+| `quiet`, `dhw_boost` | Quiet mode and fast hot water, toggle buttons in the mode menu |
 
 Example, GREE Versati with EWPE HP:
 

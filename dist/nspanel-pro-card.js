@@ -1,5 +1,5 @@
 /*!
- * NSPanel Pro Card v1.6.1
+ * NSPanel Pro Card v1.7.0
  * Full-screen smart-home panel for Home Assistant — Sonoff NSPanel Pro (480×480) or phone.
  * Clock + weather start screen, settings menu (theme / language / accent colour),
  * recuperator, air conditioner(s), heat pump, solar inverter and custom buttons.
@@ -8,7 +8,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.6.1';
+  var VERSION = '1.7.0';
   var CARD = 'nspanel-pro-card';
   var EDITOR = 'nspanel-pro-card-editor';
 
@@ -190,10 +190,9 @@
     ['cool_dhw', /cool\w*[ _+&/-]*(hot.?water|dhw)|охлаж\S*\s*\+\s*гвс|dzes\S*\s*\+\s*k/i, 'mdi:snowflake-thermometer'],
     ['heat', /^heat$|heating|отоп|нагрев|apkur|sild/i, 'mdi:radiator'],
     ['cool', /^cool$|cooling|охлаж|dzes/i, 'mdi:snowflake'],
-    ['dhw', /^dhw$|гвс|hot.?water|water|ūden|бойлер|boiler/i, 'mdi:water-boiler'],
-    ['auto', /^auto$|авто|automatic/i, 'mdi:thermostat-auto']
+    ['dhw', /^dhw$|гвс|hot.?water|water|ūden|бойлер|boiler/i, 'mdi:water-boiler']
   ];
-  var HP_ORDER = ['heat', 'heat_dhw', 'dhw', 'cool_dhw', 'cool', 'auto'];
+  var HP_ORDER = ['heat', 'heat_dhw', 'dhw', 'cool_dhw', 'cool'];
   var HP_COOLING = { cool: 1, cool_dhw: 1 };
 
   /* EWPE HP (GREE Versati through the Gree+ cloud): card field <- entity translation key */
@@ -235,13 +234,6 @@
     if (heaters.length) out.heaters = heaters.sort();
     return out;
   }
-  var HP_STATUS = [
-    ['off', /^off$|выкл|izsl/i],
-    ['dhw', /dhw|гвс|hot.?water|ūden|boiler|бойлер/i],
-    ['cool', /cool|охлаж|dzes/i],
-    ['heat', /heat|нагрев|отоп|apkur|sild/i],
-    ['idle', /idle|standby|stand-by|ожидан|gaid|pause/i]
-  ];
   var HVAC_ICON = {
     auto: 'mdi:thermostat-auto', heat_cool: 'mdi:sun-snowflake-variant', cool: 'mdi:snowflake', heat: 'mdi:fire',
     dry: 'mdi:water-percent', fan_only: 'mdi:fan', off: 'mdi:power'
@@ -322,7 +314,6 @@
       .filter(function (a) { return a && a.entity; });
     n._acTitle = isObj(acSec) ? acSec.name : null;
     n._hp = sec(c.heat_pump);
-    if (n._hp && !n._hp.electric_power && n._hp.power_kw) n._hp = Object.assign({}, n._hp, { electric_power: n._hp.power_kw });
     n._solar = sec(c.solar);
     n._ss = isObj(c.screensaver) && c.screensaver.enabled !== false ? c.screensaver : null;
     n._buttons = (c.custom_buttons || []).filter(function (b) {
@@ -708,7 +699,7 @@
     _ewpe() {
       var base = this._hpBase;
       /* ewpe_hp, or a heat pump section without a single entity of its own: the interface is right from the start */
-      var own = ['power', 'mode', 'status', 'water_out', 'water_target', 'dhw_target'].some(function (k) { return !!(base && base[k]); });
+      var own = ['power', 'mode', 'water_out', 'water_target', 'dhw_target'].some(function (k) { return !!(base && base[k]); });
       if (!base || (!base.ewpe_hp && own)) return;
       var found = ewpeFields(this._hass, base.ewpe_hp);
       var key = JSON.stringify(found);
@@ -1739,17 +1730,8 @@
       var modes = this._hpModes();
       var mode = null;
       if (ms) modes.forEach(function (m) { if (m.option === ms.state) mode = m.key; });
-      var hz = this._n(c.compressor, NaN);
-      var status = null, raw = null;
-      var ss = this._st(c.status);
-      if (this._ok(ss)) {
-        raw = ss.state;
-        for (var i = 0; i < HP_STATUS.length; i++) if (HP_STATUS[i][1].test(raw)) { status = HP_STATUS[i][0]; break; }
-      }
-      if (!status && !raw) {
-        status = !on ? 'off' : (isNaN(hz) || hz > 0) ? (HP_COOLING[mode] ? 'cool' : mode === 'dhw' ? 'dhw' : 'heat') : 'idle';
-      }
-      return { on: on, mode: mode, status: status, raw: raw, hz: hz, modes: modes };
+      var status = !on ? 'off' : HP_COOLING[mode] ? 'cool' : mode === 'dhw' ? 'dhw' : 'heat';
+      return { on: on, mode: mode, status: status, raw: null, modes: modes };
     }
     _targetVal(eid) {
       var s = this._st(eid);
@@ -1767,7 +1749,6 @@
     _tileHp() {
       var c = this._c._hp, i = this._hpInfo();
       var st = i.status ? this.t('st_' + i.status) : i.raw;
-      if (i.on && c.cop && !isNaN(this._n(c.cop))) st += ' · ' + this.t('cop') + ' ' + this._num(this._n(c.cop), 1);
       var err = this._hpError();
       if (err) st = '⚠ ' + err;
       var wv = this._n(c.water_out);
@@ -1801,13 +1782,12 @@
           '<div class="ring-l">' + esc(this.t('flow')) + '</div>';
       }
 
-      var wc = c.weather_comp ? this._isOn(c.weather_comp) : false;
       var steppers = [];
       var wtE = this._hpWaterTarget(i.mode);
       if (wtE) {
         var wt = this._pv(wtE, this._targetVal(wtE));
         steppers.push(this._stepper(HP_COOLING[i.mode] ? this.t('hp_cool') : this.t('hp_heat'), HP_COOLING[i.mode] ? 'mdi:snowflake' : 'mdi:radiator',
-          this._num(wt, 1) + '<small>°C</small>', 'hp_t', 'w', { small: true, note: wc ? this.t('curve') : '' }));
+          this._num(wt, 1) + '<small>°C</small>', 'hp_t', 'w', { small: true }));
       }
       if (c.dhw_target) {
         var dt = this._pv(c.dhw_target, this._targetVal(c.dhw_target));
@@ -1818,36 +1798,29 @@
       var ring = this._ring(steppers.length ? 200 : 232, (wout - 10) / 50, scol, center, ringOpt);
 
       var mb = '';
-      if (i.modes.length || c.quiet || c.weather_comp || c.dhw_boost) {
+      if (i.modes.length || c.quiet || c.dhw_boost) {
         var cm = null;
         i.modes.forEach(function (m) { if (m.key === i.mode) cm = m; });
         var subs = [this.t('mode_lbl')];
-        [[c.quiet, 'quiet'], [c.weather_comp, 'weather_comp'], [c.dhw_boost, 'dhw_boost']].forEach(function (x) {
+        [[c.quiet, 'quiet'], [c.dhw_boost, 'dhw_boost']].forEach(function (x) {
           if (x[0] && self._isOn(x[0])) subs.push(self.t(x[1]));
         });
         mb = this._mbtn('hp', cm ? cm.icon : 'mdi:heat-pump-outline', !i.on ? this.t('off') : cm ? this.t('hp_' + cm.key) : stTxt,
           subs.join(' · '), i.on ? '' : 'var(--sf3)');
       }
-      var kp = this._kpis(this._hpStats().filter(function (x) { return !(c.dhw_tank && x[4] === 'tank'); })
-        .map(function (x) { return self._kpi(x[0], x[1], x[2], x[3], x[4] === 'ret' ? { sheet: 'hp_temps' } : null); }));
+      /* always the same three: outdoor, return (all temperatures on tap), electric heating */
+      var kp = this._kpis([
+        this._kpi('mdi:home-thermometer-outline', this.t('outdoor'), this._num(this._outdoor(), 1), '°C'),
+        this._kpi('mdi:thermometer-chevron-down', this.t('ret'), this._num(this._n(c.water_in), 1), '°C', { sheet: 'hp_temps' }),
+        this._kpi('mdi:heating-coil', this.t('heaters'), this._hpHeaters(), '')
+      ]);
       return hdr + '<div class="ctl hero">' + ring + (steppers.length ? '<div class="col">' + steppers.join('') + '</div>' : '') + '</div>' + mb + kp;
     }
-    _hpStats() {
-      var c = this._c._hp, i = this._hpInfo(), out = [];
-      var pkw = toKw(this._st(c.electric_power)), cop = this._n(c.cop), o = this._outdoor();
-      if (!isNaN(o)) out.push(['mdi:home-thermometer-outline', this.t('outdoor'), this._num(o, 1), '°C']);
-      if (c.dhw_tank) out.push(['mdi:water-thermometer', this.t('tank'), this._num(this._n(c.dhw_tank), 1), '°C', 'tank']);
-      if (c.electric_power) out.push(['mdi:flash', this.t('power'), this._num(pkw, pkw < 10 ? 1 : 0), this.t('u_kw')]);
-      if (c.cop) out.push(['mdi:gauge', this.t('cop'), this._num(cop, 1), '']);
-      if (c.water_in) out.push(['mdi:thermometer-chevron-down', this.t('ret'), this._num(this._n(c.water_in), 1), '°C', 'ret']);
-      if (c.compressor) out.push(['mdi:sine-wave', this.t('compressor'), this._num(i.hz, 0), this.t('u_hz')]);
-      if (c.heaters && c.heaters.length) {
-        var self2 = this, onH = c.heaters.filter(function (e) { return self2._isOn(e); }).length;
-        out.push(['mdi:heating-coil', this.t('heaters'), onH ? (c.heaters.length > 1 ? onH + '/' + c.heaters.length : this.t('on')) : this.t('off'), '']);
-      }
-      if (c.electric_power && c.cop) out.push(['mdi:fire', this.t('heat_out'), this._num(pkw * cop, 1), this.t('u_kw')]);
-      if (c.energy_today) out.push(['mdi:counter', this.t('today'), this._num(toKwh(this._st(c.energy_today)), 1), this.t('u_kwh')]);
-      return out;
+    _hpHeaters() {
+      var c = this._c._hp, self = this, list = c.heaters || [];
+      if (!list.length) return '—';
+      var on = list.filter(function (e) { return self._isOn(e); }).length;
+      return on ? (list.length > 1 ? on + '/' + list.length : this.t('on')) : this.t('off');
     }
     _sh_hp_temps() {
       var c = this._c._hp, self = this;
@@ -1863,6 +1836,7 @@
         row('mdi:home-thermometer-outline', this.t('outdoor'), this._outdoor()),
         c.room ? row('mdi:sofa-outline', this.t('room'), this._n(c.room)) : null
       ].filter(Boolean);
+      temps.push(this._shInfo('mdi:heating-coil', this.t('heaters'), this._hpHeaters(), ''));
       var sets = [
         c.water_target ? row('mdi:radiator', this.t('hp_heat'), this._targetVal(c.water_target)) : null,
         c.water_target_cool ? row('mdi:snowflake', this.t('water_cool'), this._targetVal(c.water_target_cool)) : null,
@@ -1878,14 +1852,14 @@
       if (!c) return null;
       var i = this._hpInfo();
       var modes = i.modes.map(function (m) { return self._shOpt(m.icon, self.t('hp_' + m.key), i.on && i.mode === m.key, 'hp_mode', { v: m.key, close: 1 }); });
-      var fn = [[c.quiet, 'mdi:volume-off', 'quiet'], [c.weather_comp, 'mdi:chart-bell-curve-cumulative', 'weather_comp'], [c.dhw_boost, 'mdi:lightning-bolt', 'dhw_boost']]
+      var fn = [[c.quiet, 'mdi:volume-off', 'quiet'], [c.dhw_boost, 'mdi:lightning-bolt', 'dhw_boost']]
         .filter(function (x) { return !!x[0]; })
         .map(function (x) { return self._shOpt(x[1], self.t(x[2]), self._isOn(x[0]), 'toggle', { e: x[0] }); });
-      var data = this._hpStats().map(function (x) { return self._shInfo(x[0], x[1], x[2], x[3]); });
+      var temps = this._sh_hp_temps();
       return {
         title: this.t('ctl'),
-        sections: [this._shSec(this.t('modes'), 'mdi:tune-variant', modes, 2), this._shSec(this.t('functions'), 'mdi:toggle-switch-outline', fn, fn.length === 3 ? 3 : 2),
-          this._shSec(this.t('data'), 'mdi:chart-box-outline', data, 2)]
+        sections: [this._shSec(this.t('modes'), 'mdi:tune-variant', modes, 2), this._shSec(this.t('functions'), 'mdi:toggle-switch-outline', fn, 2)]
+          .concat(temps ? temps.sections : [])
       };
     }
 
@@ -2520,12 +2494,10 @@
             E('dhw_target', ['number', 'input_number', 'water_heater', 'climate']), E('error', ['sensor', 'binary_sensor']),
             E('hp_out', SENS), E('room', SENS),
             E('water_out', SENS), E('water_in', SENS), E('dhw_tank', SENS), E('outdoor', SENS),
-            E('compressor', SENS), E('electric_power', SENS), E('cop', SENS), E('energy_today', SENS),
-            E('status', ['sensor', 'select', 'input_select']), E('quiet', ['switch', 'input_boolean']),
-            E('weather_comp', ['switch', 'input_boolean']), E('dhw_boost', ['switch', 'input_boolean'])]),
-          E('heaters', 'binary_sensor', true),
+            E('quiet', ['switch', 'input_boolean']), E('dhw_boost', ['switch', 'input_boolean'])]),
+          E('heaters', ['binary_sensor', 'input_boolean'], true),
           sub('sec_hp_modes', 'mdi:format-list-bulleted', [G([OPT('mode_heat', hp.mode), OPT('mode_heat_dhw', hp.mode),
-            OPT('mode_dhw', hp.mode), OPT('mode_cool_dhw', hp.mode), OPT('mode_cool', hp.mode), OPT('mode_auto', hp.mode)])])
+            OPT('mode_dhw', hp.mode), OPT('mode_cool_dhw', hp.mode), OPT('mode_cool', hp.mode)])])
         ]),
         sec('solar', 'mdi:solar-power-variant', [
           TX('name'),
