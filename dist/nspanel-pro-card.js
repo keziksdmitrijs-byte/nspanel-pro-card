@@ -1,5 +1,5 @@
 /*!
- * NSPanel Pro Card v1.7.0
+ * NSPanel Pro Card v1.8.0
  * Full-screen smart-home panel for Home Assistant — Sonoff NSPanel Pro (480×480) or phone.
  * Clock + weather start screen, settings menu (theme / language / accent colour),
  * recuperator, air conditioner(s), heat pump, solar inverter and custom buttons.
@@ -8,7 +8,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.7.0';
+  var VERSION = '1.8.0';
   var CARD = 'nspanel-pro-card';
   var EDITOR = 'nspanel-pro-card-editor';
 
@@ -46,6 +46,12 @@
     ru: {
       home_screen: 'Главный экран', settings: 'Настройки', theme: 'Тема', dark: 'Тёмная', light: 'Светлая', auto: 'Авто',
       language: 'Язык', accent: 'Цвет акцента',
+      acs: 'Кондиционеры', panel_settings: 'Настройки панели', devices: 'Подключение устройств', connect: 'Подключить', add_more: 'Добавить ещё',
+      st_connected: 'Подключено', st_not_setup: 'Не подключено', st_not_installed: 'Интеграция не установлена', st_failed: 'Ошибка подключения',
+      admin_only: 'Подключать устройства может только администратор Home Assistant.',
+      install_hint: 'Установите интеграцию через HACS и перезапустите Home Assistant — после этого её можно подключить здесь.',
+      next: 'Далее', cancel: 'Отмена', ok: 'Готово', wait: 'Подождите…', flow_done: 'Устройство подключено', flow_err: 'Не удалось подключить',
+      devices_note: 'После подключения панель сама показывает устройство — выбирать сущности не нужно.',
       recuperator: 'Рекуператор', ac: 'Кондиционер', heatpump: 'Тепловой насос', solar: 'Солнечная станция',
       weather: 'Погода', on: 'Вкл', off: 'Выкл', unavailable: 'Недоступно',
       empty: 'Нет подключённых устройств. Откройте редактор карточки и включите нужные разделы.',
@@ -90,6 +96,12 @@
     lv: {
       home_screen: 'Sākuma ekrāns', settings: 'Iestatījumi', theme: 'Tēma', dark: 'Tumšā', light: 'Gaišā', auto: 'Auto',
       language: 'Valoda', accent: 'Akcenta krāsa',
+      acs: 'Kondicionieri', panel_settings: 'Paneļa iestatījumi', devices: 'Ierīču pieslēgšana', connect: 'Pieslēgt', add_more: 'Pievienot vēl',
+      st_connected: 'Pieslēgts', st_not_setup: 'Nav pieslēgts', st_not_installed: 'Integrācija nav instalēta', st_failed: 'Pieslēgšanas kļūda',
+      admin_only: 'Ierīces var pieslēgt tikai Home Assistant administrators.',
+      install_hint: 'Instalējiet integrāciju ar HACS un pārstartējiet Home Assistant — pēc tam to var pieslēgt šeit.',
+      next: 'Tālāk', cancel: 'Atcelt', ok: 'Gatavs', wait: 'Uzgaidiet…', flow_done: 'Ierīce pieslēgta', flow_err: 'Neizdevās pieslēgt',
+      devices_note: 'Pēc pieslēgšanas panelis pats parāda ierīci — entītijas nav jāizvēlas.',
       recuperator: 'Rekuperators', ac: 'Kondicionieris', heatpump: 'Siltumsūknis', solar: 'Saules stacija',
       weather: 'Laikapstākļi', on: 'Iesl.', off: 'Izsl.', unavailable: 'Nav pieejams',
       empty: 'Nav pievienotu ierīču. Atveriet kartītes redaktoru un ieslēdziet vajadzīgās sadaļas.',
@@ -134,6 +146,12 @@
     en: {
       home_screen: 'Start screen', settings: 'Settings', theme: 'Theme', dark: 'Dark', light: 'Light', auto: 'Auto',
       language: 'Language', accent: 'Accent colour',
+      acs: 'Air conditioners', panel_settings: 'Panel settings', devices: 'Connect devices', connect: 'Connect', add_more: 'Add another',
+      st_connected: 'Connected', st_not_setup: 'Not connected', st_not_installed: 'Integration not installed', st_failed: 'Connection error',
+      admin_only: 'Only a Home Assistant administrator can connect devices.',
+      install_hint: 'Install the integration with HACS and restart Home Assistant — then it can be connected here.',
+      next: 'Next', cancel: 'Cancel', ok: 'Done', wait: 'Please wait…', flow_done: 'Device connected', flow_err: 'Could not connect',
+      devices_note: 'Once connected the panel shows the device by itself — no entities to pick.',
       recuperator: 'Recuperator', ac: 'Air conditioner', heatpump: 'Heat pump', solar: 'Solar plant',
       weather: 'Weather', on: 'On', off: 'Off', unavailable: 'Unavailable',
       empty: 'No devices configured. Open the card editor and enable the sections you need.',
@@ -204,6 +222,18 @@
     hp_out: ['sensor', 'heat_pump_outlet'], room: ['sensor', 'room_temperature']
   };
   var EWPE_HEATERS = ['tank_heater', 'heater_1', 'heater_2'];
+  /* devices the panel can connect itself, and the integrations behind them */
+  var CONNECT = [
+    { key: 'rec', title: 'recuperator', icon: 'mdi:hvac', via: [['alpicair_nest', 'AlpicAir NEST']] },
+    { key: 'hp', title: 'heatpump', icon: 'mdi:heat-pump-outline', via: [['ewpe_hp', 'EWPE HP']] },
+    { key: 'ac', title: 'acs', icon: 'mdi:air-conditioner', via: [['gree', 'Gree'], ['ewpe_hp', 'EWPE HP']] }
+  ];
+  function platformEntities(hass, platforms, domain) {
+    var reg = (hass && hass.entities) || {};
+    return Object.keys(reg).filter(function (e) {
+      return platforms.indexOf(reg[e].platform) >= 0 && (!domain || e.split('.')[0] === domain) && !reg[e].hidden;
+    }).sort();
+  }
   /* the entities of one EWPE HP unit, by card field; the first unit unless one is named */
   function ewpeFields(hass, unit) {
     var reg = hass && hass.entities;
@@ -563,6 +593,29 @@
     '.swc{width:40px;height:40px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;color:#fff}',
     '.swc ha-icon{--mdc-icon-size:20px}',
     '.about{font-size:11px;color:var(--tx3);text-align:center}',
+    '.opt.wide{width:100%;border:0;font:inherit;color:var(--tx);cursor:pointer;background:var(--sf2)}',
+    '.opt-t{flex:1 1 auto;text-align:left;font-size:15px;font-weight:600}.opt ha-icon.opt-go{color:var(--tx3);margin:0}',
+    '.dv{display:flex;flex-direction:column;gap:10px}',
+    '.dv-r{display:flex;align-items:center;gap:10px;padding:6px 0}.dv-r+.dv-r{border-top:1px solid var(--sf3)}',
+    '.dv-n{flex:1 1 auto;display:flex;flex-direction:column;min-width:0}.dv-n b{font-size:15px}',
+    '.dv-s{font-size:12.5px;color:var(--tx3)}.dv-s.ok{color:var(--ok,#2e9e5b)}.dv-s.bad{color:var(--err,#e5484d)}',
+    '.dv-b{border:0;border-radius:14px;padding:10px 16px;font:inherit;font-weight:600;background:var(--accent);color:#fff;cursor:pointer;flex:none}',
+    '.dv-b.soft{background:rgba(var(--acc-rgb),.14);color:var(--accent)}',
+    '.dv-note{font-size:12.5px;color:var(--tx2);text-align:center;padding:0 8px}',
+    '.fl{display:flex;flex-direction:column;gap:10px}.fl-st{font-size:16px;font-weight:700}.fl-d{font-size:13.5px;color:var(--tx2);white-space:pre-line}',
+    '.fl-form{display:flex;flex-direction:column;gap:10px}.fl-f{display:flex;flex-direction:column;gap:5px}',
+    '.fl-l{font-size:13px;font-weight:600;color:var(--tx2)}.fl-h{font-size:11.5px;color:var(--tx3)}',
+    '.fl-i{height:46px;border-radius:14px;border:1px solid var(--sf3);background:var(--sf2);color:var(--tx);font:inherit;font-size:16px;padding:0 12px;outline:none;width:100%;box-sizing:border-box}',
+    '.fl-i:focus{border-color:var(--accent)}',
+    '.fl-opts{display:flex;flex-wrap:wrap;gap:6px}.fl-o{border:0;border-radius:12px;padding:9px 12px;font:inherit;background:var(--sf2);color:var(--tx);cursor:pointer}',
+    '.fl-o.on{background:var(--accent);color:#fff}.fl-o ha-icon{--mdc-icon-size:28px}',
+    '.fl-menu{display:flex;flex-direction:column;gap:8px}',
+    '.fl-err{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--err,#e5484d)}.fl-err ha-icon{--mdc-icon-size:18px}',
+    '.fl-wait,.fl-done{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:18px 0;color:var(--tx2)}',
+    '.fl-wait ha-icon,.fl-done ha-icon{--mdc-icon-size:40px}.fl-done.ok ha-icon{color:var(--ok,#2e9e5b)}.fl-done.bad ha-icon{color:var(--err,#e5484d)}',
+    '.fl-done b{font-size:17px;color:var(--tx)}',
+    '.fl ha-icon.spin{--spd:1s}',
+    '.sb.busy{opacity:.7;pointer-events:none}',
     /* weather page */
     '.wnow{display:flex;align-items:center;background:var(--sf);border-radius:22px;padding:12px 16px;box-shadow:var(--sh)}',
     '.wnow .wx-ic{--mdc-icon-size:64px;margin-right:12px}',
@@ -661,13 +714,11 @@
     static getStubConfig(hass) {
       var ids = hass ? Object.keys(hass.states) : [];
       var weather = ids.filter(function (e) { return e.indexOf('weather.') === 0; })[0];
-      var climates = ids.filter(function (e) { return e.indexOf('climate.') === 0; }).slice(0, 4);
+      /* recuperator, heat pump and air conditioners are left out: the card takes them from
+         AlpicAir NEST, EWPE HP and Gree as soon as they are connected */
       return {
         device: 'nspanel',
         weather: weather || '',
-        recuperator: { enabled: false },
-        air_conditioner: { enabled: climates.length > 0, entities: climates },
-        heat_pump: ewpeFields(hass) ? { enabled: true, ewpe_hp: true } : { enabled: false },
         solar: { enabled: false }
       };
     }
@@ -689,10 +740,40 @@
       if (nestKey !== this._nestKey) { this._nestUnsub(); this._nestKey = nestKey; this._nestData = null; }
       if (this._hass) this._nestSubscribe();
       this._ewpeKey = null;
+      this._autoKey = null;
       this._hpBase = this._c._hp;
-      if (this._hass) this._ewpe();
-      if (['home', 'menu', 'weather', 'rec', 'ac', 'hp', 'solar'].indexOf(this._page) < 0) this._page = 'home';
+      this._watchBase = this._watch;
+      if (this._hass) { this._auto(); this._ewpe(); }
+      if (['home', 'menu', 'weather', 'rec', 'ac', 'hp', 'solar', 'devices', 'flow'].indexOf(this._page) < 0) this._page = 'home';
       if (this._hass && this._pageEl) this._render(true);
+    }
+
+    /* sections the config leaves out are filled from connected integrations:
+       recuperator <- AlpicAir NEST, heat pump <- EWPE HP, air conditioners <- Gree / EWPE HP */
+    _auto() {
+      var cfg = this._config || {}, hass = this._hass;
+      if (!hass || !hass.entities) return;
+      var rec = !('recuperator' in cfg) && platformEntities(hass, ['alpicair_nest']).length > 0;
+      var hp = !('heat_pump' in cfg) && !!ewpeFields(hass);
+      var acs = !('air_conditioner' in cfg) && !('air_conditioners' in cfg) ? platformEntities(hass, ['gree', 'ewpe_hp'], 'climate') : [];
+      var key = JSON.stringify([rec, hp, acs]);
+      if (key === this._autoKey) return;
+      this._autoKey = key;
+      if (!('recuperator' in cfg)) this._c._rec = rec ? { type: 'nest_new' } : null;
+      if (!('heat_pump' in cfg)) { this._hpBase = hp ? { enabled: true, ewpe_hp: true } : null; this._c._hp = this._hpBase; }
+      this._ewpeKey = null;
+      if (!('air_conditioner' in cfg) && !('air_conditioners' in cfg)) this._c._acs = acs.map(function (e) { return { entity: e }; });
+      var watch = {};
+      (this._watchBase || []).forEach(function (e) { watch[e] = 1; });
+      acs.forEach(function (e) {
+        watch[e] = 1;
+        var obj = e.split('.')[1];
+        AC_SWITCHES.forEach(function (sw) { watch['switch.' + obj + '_' + sw[0]] = 1; });
+      });
+      this._watch = Object.keys(watch);
+      var nestKey = this._nestType() ? 'nest|' : '';
+      if (nestKey !== this._nestKey) { this._nestUnsub(); this._nestKey = nestKey; this._nestData = null; this._nestSubscribe(); }
+      this._sig = '';
     }
 
     /* heat_pump.ewpe_hp: fields left empty are taken from the EWPE HP integration */
@@ -724,6 +805,7 @@
       if (!this._pageEl) this._build();
       if (first) { this._subscribeForecast(); this._nestSubscribe(); }
       if (this._wall) this._wall.hass = hass;
+      this._auto();
       this._ewpe();
       var sig = this._signature();
       if (sig !== this._sig) { this._sig = sig; this._render(); }
@@ -818,7 +900,7 @@
       if (key !== this._minuteKey) { this._minuteKey = key; this._render(); if (this._ssOn) this._renderSs(); }
       if (!this._ssOn && this._ssActive() && Date.now() - this._lastTouch > this._ssTimeout() * 1000) this._sleep();
       var to = this._c ? Number(this._c.home_timeout) : 0;
-      if (to > 0 && (this._page !== 'home' || this._sheet) && Date.now() - this._lastTouch > to * 1000) {
+      if (to > 0 && (this._page !== 'home' || this._sheet) && this._page !== 'flow' && Date.now() - this._lastTouch > to * 1000) {
         this._page = 'home';
         this._sheet = null;
         this._render(true);
@@ -1179,7 +1261,7 @@
     _hdr(title, sub, opt) {
       opt = opt || {};
       return '<div class="hdr">' +
-        '<button class="ib" data-a="home">' + ic('mdi:chevron-left') + '</button>' +
+        (opt.back ? '<button class="ib" data-a="nav" data-p="' + opt.back + '">' : '<button class="ib" data-a="home">') + ic('mdi:chevron-left') + '</button>' +
         '<div class="hdr-t"><div class="ttl">' + esc(title) + '</div>' +
         (sub ? '<div class="sub' + (opt.subErr ? ' err' : '') + '">' + esc(sub) + '</div>' : '') + '</div>' +
         (opt.extra || '') +
@@ -2010,7 +2092,249 @@
           return '<button class="swc" data-a="set" data-s="accent" data-v="' + k + '" style="background:' + ACCENTS[k] +
             (on ? ';box-shadow:0 0 0 3px var(--sf),0 0 0 5px ' + ACCENTS[k] : '') + '">' + (on ? ic('mdi:check') : '') + '</button>';
         }).join('') + '</div></div>' +
+        '<div class="sec"><div class="sec-t">' + ic('mdi:cog-outline') + esc(this.t('panel_settings')) + '</div>' +
+        '<button class="opt wide" data-a="nav" data-p="devices">' + ic('mdi:devices') + '<span class="opt-t">' + esc(this.t('devices')) + '</span>' +
+        ic('mdi:chevron-right', 'opt-go') + '</button></div>' +
         '<div class="about">NSPanel Pro Card v' + VERSION + '</div>';
+    }
+
+    /* =========================================================== DEVICES */
+    /* which integrations are installed and connected; asked again each time the page opens */
+    _devScan() {
+      var self = this, hass = this._hass;
+      if (!hass || this._devBusy) return;
+      this._devBusy = true;
+      var domains = [];
+      CONNECT.forEach(function (d) { d.via.forEach(function (v) { if (domains.indexOf(v[0]) < 0) domains.push(v[0]); }); });
+      var admin = !!(hass.user && hass.user.is_admin);
+      Promise.all(domains.map(function (dom) {
+        var installed = hass.callWS({ type: 'manifest/get', integration: dom }).then(function () { return true; }, function () { return false; });
+        var entries = admin ? hass.callWS({ type: 'config_entries/get', domain: dom }).then(function (l) { return l || []; }, function () { return null; }) : Promise.resolve(null);
+        return Promise.all([installed, entries]).then(function (r) {
+          var list = r[1];
+          var mine = platformEntities(hass, [dom]).length;
+          return [dom, {
+            installed: r[0] || mine > 0,
+            connected: list ? list.some(function (e) { return e.state === 'loaded'; }) : mine > 0,
+            failed: list ? list.length > 0 && !list.some(function (e) { return e.state === 'loaded'; }) : false
+          }];
+        });
+      })).then(function (res) {
+        var st = {};
+        res.forEach(function (x) { st[x[0]] = x[1]; });
+        self._devState = st;
+        self._devBusy = false;
+        self._render();
+      }, function () { self._devBusy = false; });
+    }
+    _p_devices() {
+      var self = this, st = this._devState || {};
+      if (!this._devState) this._devScan();
+      var admin = !!(this._hass.user && this._hass.user.is_admin);
+      var rows = CONNECT.map(function (d) {
+        var via = d.via.map(function (v) {
+          var s = st[v[0]];
+          var txt = !s ? self.t('wait') : s.connected ? self.t('st_connected') : s.failed ? self.t('st_failed') : s.installed ? self.t('st_not_setup') : self.t('st_not_installed');
+          var cls = s && s.connected ? ' ok' : s && s.failed ? ' bad' : '';
+          var btn = s && s.installed && admin
+            ? '<button class="dv-b' + (s.connected ? ' soft' : '') + '" data-a="flow_start" data-v="' + v[0] + '">' +
+              esc(s.connected ? self.t('add_more') : self.t('connect')) + '</button>' : '';
+          return '<div class="dv-r"><div class="dv-n"><b>' + esc(v[1]) + '</b><span class="dv-s' + cls + '">' + esc(txt) + '</span></div>' + btn + '</div>';
+        }).join('');
+        return '<div class="sec"><div class="sec-t">' + ic(d.icon) + esc(self.t(d.title)) + '</div>' + via + '</div>';
+      }).join('');
+      var notes = [this.t('devices_note')];
+      if (!admin) notes.unshift(this.t('admin_only'));
+      if (CONNECT.some(function (d) { return d.via.some(function (v) { return st[v[0]] && !st[v[0]].installed; }); })) notes.push(this.t('install_hint'));
+      return this._hdr(this.t('devices'), this.t('panel_settings'), { back: 'menu' }) + '<div class="dv">' + rows +
+        notes.map(function (n) { return '<div class="dv-note">' + esc(n) + '</div>'; }).join('') + '</div>';
+    }
+
+    /* ---------------------------------------------------- setup in the card */
+    /* an integration's own setup (config flow), drawn by the card: forms, menus, progress */
+    _flowTr(key) { var r = this._flowRes || {}; return r[key]; }
+    _flowText(path, fallback) {
+      var f = this._flow;
+      var v = f ? this._flowTr('component.' + f.domain + '.' + path) : null;
+      return v === undefined || v === null ? fallback : v;
+    }
+    _flowFill(text, ph) {
+      return String(text || '').replace(/\{(\w+)\}/g, function (m, k) { return ph && ph[k] !== undefined ? ph[k] : m; });
+    }
+    _flowStart(domain) {
+      var self = this, hass = this._hass;
+      this._flow = { domain: domain, busy: true, step: null, vals: {}, error: null };
+      this._page = 'flow';
+      this._render(true);
+      var lang = this._curLang || 'en';
+      Promise.all(['config', 'selector'].map(function (cat) {
+        return hass.callWS({ type: 'frontend/get_translations', language: lang, category: cat, integration: [domain] })
+          .then(function (r) { return (r && r.resources) || {}; }, function () { return {}; });
+      })).then(function (rs) { self._flowRes = Object.assign({}, rs[0], rs[1]); self._render(); });
+      hass.callApi('POST', 'config/config_entries/flow', { handler: domain, show_advanced_options: false })
+        .then(function (r) { self._flowStep(r); }, function (e) { self._flowFail(e); });
+    }
+    _flowStep(r) {
+      var f = this._flow, self = this;
+      if (!f) return;
+      clearTimeout(this._flowTimer);
+      var again = f.step && f.step.step_id === r.step_id && r.type === 'form';
+      f.busy = false;
+      f.step = r;
+      f.error = null;
+      /* the same form back with errors keeps what was picked */
+      var kept = again ? f.vals : {};
+      f.vals = {};
+      if (r.type === 'progress' || r.type === 'progress_done') {
+        /* the integration works in the background (a network scan): ask again until it is done */
+        f.busy = r.type === 'progress_done';
+        this._flowTimer = setTimeout(function () {
+          if (!self._flow || self._flow.step !== r) return;
+          self._hass.callApi('GET', 'config/config_entries/flow/' + r.flow_id).then(function (n) { self._flowStep(n); }, function (e) { self._flowFail(e); });
+        }, r.type === 'progress_done' ? 100 : 1500);
+      }
+      if (r.type === 'form') {
+        (r.data_schema || []).forEach(function (fld) {
+          var sv = fld.description && fld.description.suggested_value;
+          var def = fld.default !== undefined ? fld.default : sv;
+          if (def !== undefined && def !== null) f.vals[fld.name] = def;
+          if (kept[fld.name] !== undefined) f.vals[fld.name] = kept[fld.name];
+        });
+      }
+      if (r.type === 'create_entry') { this._devState = null; }
+      this._render(true);
+    }
+    _flowFail(e) {
+      var f = this._flow;
+      if (!f) return;
+      f.busy = false;
+      f.error = (e && (e.body && e.body.message || e.message)) || this.t('flow_err');
+      this._render(true);
+    }
+    _flowSend(data) {
+      var f = this._flow, self = this;
+      if (!f || !f.step || f.busy) return;
+      f.busy = true;
+      f.error = null;
+      this._render();
+      this._hass.callApi('POST', 'config/config_entries/flow/' + f.step.flow_id, data)
+        .then(function (r) { self._flowStep(r); }, function (e) { self._flowFail(e); });
+    }
+    _flowSubmit() {
+      var f = this._flow;
+      if (!f || !f.step) return;
+      var data = {}, root = this.shadowRoot;
+      (f.step.data_schema || []).forEach(function (fld) {
+        var el = root.querySelector('[data-f="' + fld.name + '"]');
+        var v = el ? el.value : f.vals[fld.name];
+        var num = fld.type === 'integer' || fld.type === 'float' || (fld.selector && fld.selector.number);
+        if (el && num) v = v === '' ? undefined : Number(v);
+        if (el && !num && v === '' && !fld.required) v = undefined;
+        if (v !== undefined) data[fld.name] = v;
+      });
+      this._flowSend(data);
+    }
+    _flowClose(done) {
+      var f = this._flow;
+      clearTimeout(this._flowTimer);
+      if (f && f.step && f.step.flow_id && f.step.type !== 'create_entry' && f.step.type !== 'abort') {
+        this._hass.callApi('DELETE', 'config/config_entries/flow/' + f.step.flow_id).catch(function () {});
+      }
+      this._flow = null;
+      this._devState = null;
+      this._page = done ? 'home' : 'devices';
+      this._render(true);
+    }
+    _flowField(fld) {
+      var self = this, f = this._flow, step = f.step, base = 'config.step.' + step.step_id;
+      var label = this._flowText(base + '.data.' + fld.name, fld.name);
+      var help = this._flowText(base + '.data_description.' + fld.name, '');
+      var sel = fld.selector || {}, val = f.vals[fld.name];
+      var opts = null;
+      if (sel.select) {
+        var tk = sel.select.translation_key;
+        opts = (sel.select.options || []).map(function (o) {
+          var v = typeof o === 'object' ? o.value : o;
+          var l = typeof o === 'object' ? o.label : (tk ? self._flowText('selector.' + tk + '.options.' + o, o) : o);
+          return [v, l];
+        });
+      } else if (fld.type === 'select' && fld.options) {
+        opts = fld.options.map(function (o) { return Array.isArray(o) ? o : [o, o]; });
+      }
+      var body;
+      if (opts) {
+        body = '<div class="fl-opts">' + opts.map(function (o) {
+          return '<button class="fl-o' + (String(val) === String(o[0]) ? ' on' : '') + '" data-a="flow_pick" data-f="' + esc(fld.name) + '" data-v="' + esc(o[0]) + '">' +
+            esc(o[1]) + '</button>';
+        }).join('') + '</div>';
+      } else if (sel.boolean || fld.type === 'boolean') {
+        body = '<div class="fl-opts"><button class="fl-o' + (val ? ' on' : '') + '" data-a="flow_bool" data-f="' + esc(fld.name) + '">' +
+          ic(val ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off-outline') + '</button></div>';
+      } else if (sel.constant || fld.type === 'constant') {
+        body = '';
+      } else {
+        var t = sel.text && sel.text.type, num = sel.number || fld.type === 'integer' || fld.type === 'float';
+        var type = t === 'password' ? 'password' : t === 'email' ? 'email' : num ? 'number' : 'text';
+        var nb = sel.number || {};
+        body = '<input class="fl-i" data-f="' + esc(fld.name) + '" type="' + type + '"' +
+          (num ? ' inputmode="decimal"' + (nb.min !== undefined ? ' min="' + nb.min + '"' : '') + (nb.max !== undefined ? ' max="' + nb.max + '"' : '') +
+            ' step="' + (nb.step || 'any') + '"' : '') +
+          (type === 'password' ? ' autocomplete="current-password"' : type === 'email' ? ' autocomplete="username"' : '') +
+          ' value="' + esc(val === undefined || val === null ? '' : val) + '">';
+      }
+      return '<label class="fl-f"><span class="fl-l">' + esc(label) + (fld.required ? '' : '') + '</span>' + body +
+        (help ? '<span class="fl-h">' + esc(help) + '</span>' : '') + '</label>';
+    }
+    _p_flow() {
+      var self = this, f = this._flow;
+      if (!f) { this._page = 'devices'; return this._p_devices(); }
+      var name = '';
+      CONNECT.forEach(function (d) { d.via.forEach(function (v) { if (v[0] === f.domain) name = v[1]; }); });
+      var r = f.step, ph = (r && r.description_placeholders) || {};
+      var title = name, body = '', actions = '';
+      var err = f.error ? '<div class="fl-err">' + ic('mdi:alert-circle-outline') + esc(f.error) + '</div>' : '';
+      if (!r) {
+        body = f.error ? '' : '<div class="fl-wait">' + ic('mdi:loading', 'spin') + esc(this.t('wait')) + '</div>';
+        actions = this._sb(null, this.t('cancel'), false, 'flow_cancel');
+      } else if (r.type === 'form' || r.type === 'menu') {
+        var base = 'config.step.' + r.step_id;
+        var st = this._flowText(base + '.title', '');
+        var desc = this._flowFill(this._flowText(base + '.description', ''), ph);
+        var errs = r.errors || {};
+        var errTxt = Object.keys(errs).map(function (k) { return self._flowText('config.error.' + errs[k], errs[k]); });
+        body = (st ? '<div class="fl-st">' + esc(this._flowFill(st, ph)) + '</div>' : '') +
+          (desc ? '<div class="fl-d">' + esc(desc) + '</div>' : '') +
+          (errTxt.length ? '<div class="fl-err">' + ic('mdi:alert-circle-outline') + esc(errTxt.join(' · ')) + '</div>' : '');
+        if (r.type === 'menu') {
+          var mo = r.menu_options || [];
+          var keys = Array.isArray(mo) ? mo : Object.keys(mo);
+          body += '<div class="fl-menu">' + keys.map(function (k) {
+            var l = self._flowText(base + '.menu_options.' + k, Array.isArray(mo) ? k : mo[k]);
+            return '<button class="opt wide" data-a="flow_menu" data-v="' + esc(k) + '"><span class="opt-t">' + esc(self._flowFill(l, ph)) + '</span>' +
+              ic('mdi:chevron-right', 'opt-go') + '</button>';
+          }).join('') + '</div>';
+          actions = this._sb(null, this.t('cancel'), false, 'flow_cancel');
+        } else {
+          body += '<div class="fl-form">' + (r.data_schema || []).map(function (fld) { return self._flowField(fld); }).join('') + '</div>';
+          actions = this._sb(null, this.t('cancel'), false, 'flow_cancel') + this._sb(f.busy ? 'mdi:loading' : null, this.t('next'), true, 'flow_submit', null, f.busy ? 'busy' : '');
+        }
+      } else if (r.type === 'progress' || r.type === 'progress_done') {
+        var pa = r.progress_action ? this._flowText('config.progress.' + r.progress_action, '') : '';
+        body = '<div class="fl-wait">' + ic('mdi:loading', 'spin') + esc(this._flowFill(pa, ph) || this.t('wait')) + '</div>';
+        actions = this._sb(null, this.t('cancel'), false, 'flow_cancel');
+      } else if (r.type === 'create_entry') {
+        body = '<div class="fl-done ok">' + ic('mdi:check-circle-outline') + '<b>' + esc(this.t('flow_done')) + '</b><span>' + esc(r.title || '') + '</span></div>';
+        actions = this._sb(null, this.t('ok'), true, 'flow_done');
+      } else if (r.type === 'abort') {
+        body = '<div class="fl-done bad">' + ic('mdi:information-outline') + '<b>' + esc(this.t('flow_err')) + '</b><span>' +
+          esc(this._flowFill(this._flowText('config.abort.' + r.reason, r.reason), ph)) + '</span></div>';
+        actions = this._sb(null, this.t('ok'), true, 'flow_cancel');
+      } else {
+        body = '<div class="fl-d">' + esc(r.type) + '</div>';
+        actions = this._sb(null, this.t('cancel'), false, 'flow_cancel');
+      }
+      return this._hdr(title, this.t('devices'), { back: 'devices' }) +
+        '<div class="sec fl">' + body + err + '</div><div class="seg n2 fl-a">' + actions + '</div>';
     }
 
     /* ============================================================ EVENTS */
@@ -2035,6 +2359,7 @@
         case 'nav':
           this._page = d('p');
           this._sheet = null;
+          if (this._page === 'devices') { this._devState = null; if (this._flow) this._flowClose(false); }
           if (this._page === 'rec' && this._wall && this._wall.home) this._wall.home();
           this._render(true);
           return;
@@ -2044,6 +2369,13 @@
         case 'cbtn': { var b = c._buttons[Number(d('i'))]; if (b) this._runButton(b); return; }
         case 'sheet': this._sheet = { kind: d('v') }; this._render(); return;
         case 'sheet_close': this._sheet = null; this._render(); return;
+        case 'flow_start': this._flowStart(d('v')); return;
+        case 'flow_menu': this._flowSend({ next_step_id: d('v') }); return;
+        case 'flow_pick': if (this._flow) { this._flow.vals[d('f')] = d('v'); this._render(); } return;
+        case 'flow_bool': if (this._flow) { this._flow.vals[d('f')] = !this._flow.vals[d('f')]; this._render(); } return;
+        case 'flow_submit': this._flowSubmit(); return;
+        case 'flow_cancel': this._flowClose(false); return;
+        case 'flow_done': this._flowClose(true); return;
         case 'ac_set': {
           var acx = c._acs[this._acIdx], kd = d('k');
           var data = { entity_id: acx.entity };

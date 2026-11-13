@@ -136,6 +136,12 @@ use `switches:` to list your own.
 | `water_out`, `water_in`, `dhw_tank`, `outdoor` | Temperatures (`outdoor` falls back to the weather entity) |
 | `quiet`, `dhw_boost` | Quiet mode and fast hot water, toggle buttons in the mode menu |
 
+### Connecting devices from the panel
+
+Menu → **Panel settings → Connect devices** lists the recuperator (AlpicAir NEST), the heat pump (EWPE HP) and the air conditioners (Gree, EWPE HP). For an integration that is installed but not set up, **Connect** runs its own setup right on the panel — forms, menus, the network search — in the card's style. Once connected the panel shows the device by itself: a card without a `recuperator`, `heat_pump` or `air_conditioner` section takes them from AlpicAir NEST, EWPE HP and Gree / EWPE HP. Only a Home Assistant administrator can connect; an integration has to be installed (HACS) and Home Assistant restarted first.
+
+Меню → **Настройки панели → Подключение устройств**: рекуператор (AlpicAir NEST), тепловой насос (EWPE HP), кондиционеры (Gree, EWPE HP). Если интеграция установлена, но не настроена, кнопка **Подключить** проводит её настройку прямо на панели. После подключения панель сама показывает устройство.
+
 Example, GREE Versati with EWPE HP:
 
 ```yaml
