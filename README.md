@@ -142,6 +142,12 @@ Menu → **Panel settings → Connect devices** lists the recuperator (AlpicAir 
 
 Меню → **Настройки панели → Подключение устройств**: рекуператор (AlpicAir NEST), тепловой насос (EWPE HP), кондиционеры (Gree, EWPE HP). Если интеграция установлена, но не настроена, кнопка **Подключить** проводит её настройку прямо на панели. После подключения панель сама показывает устройство.
 
+### NSPanel settings from the panel
+
+Menu → **Panel settings → NSPanel panel** shows the panel's own settings from the NSPanel Pro integration (found automatically, nothing to configure): panel status (ADB connection, screen, IP address, last boot, illuminance, proximity, HA app and NSPanel Pro Tools versions, setup running), screen and screensaver (control buttons and circle, screensaver on/off, screensaver delay, screen and screensaver brightness), the proximity sensor (threshold, current and peak value, 10 s measurement) and the nightly reboot (on/off and time).
+
+Меню → **Настройки панели → Панель NSPanel**: состояние панели, экран и заставка, датчик приближения и ночная перезагрузка из интеграции NSPanel Pro — находятся автоматически.
+
 Example, GREE Versati with EWPE HP:
 
 ```yaml

@@ -8,7 +8,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.8.0';
+  var VERSION = '1.9.0';
   var CARD = 'nspanel-pro-card';
   var EDITOR = 'nspanel-pro-card-editor';
 
@@ -47,6 +47,14 @@
       home_screen: 'Главный экран', settings: 'Настройки', theme: 'Тема', dark: 'Тёмная', light: 'Светлая', auto: 'Авто',
       language: 'Язык', accent: 'Цвет акцента',
       acs: 'Кондиционеры', panel_settings: 'Настройки панели', devices: 'Подключение устройств', connect: 'Подключить', add_more: 'Добавить ещё',
+      np_title: 'Панель NSPanel', np_sub: 'Экран, заставка, датчик приближения, перезагрузка', np_state: 'Состояние панели', np_screen_sec: 'Экран и заставка',
+      np_prox_sec: 'Датчик приближения', np_reboot_sec: 'Ночная перезагрузка', np_adb: 'Связь по ADB', np_screen: 'Экран', np_ip: 'IP-адрес',
+      np_boot: 'Последняя загрузка', np_light: 'Освещённость', np_prox: 'Приближение', np_app: 'Приложение HA', np_tools: 'NSPanel Pro Tools',
+      np_setup: 'Идёт настройка', np_link_ok: 'Есть', np_link_no: 'Нет связи', np_sysctl: 'Кнопки управления и круг', np_ss: 'Заставка',
+      np_ss_after: 'Заставка через', np_bright: 'Яркость экрана', np_ss_bright: 'Яркость заставки', np_thr: 'Порог', np_measure: 'Измерить 10 с',
+      np_peak: 'Пик', np_now: 'Сейчас', np_prox_help: 'Меньше порог — панель просыпается издалека, больше — нужно поднести руку ближе. 0 — по умолчанию NSPanel Pro Tools. Порог должен быть заметно выше фона.',
+      np_nightly: 'Перезагружать ночью', np_reboot_at: 'Время перезагрузки', np_yes: 'Да', np_no: 'Нет', np_s: 'с', np_min: 'мин',
+      np_none: 'Интеграция NSPanel Pro не найдена. Установите и подключите её — тогда здесь появятся настройки панели.',
       st_connected: 'Подключено', st_not_setup: 'Не подключено', st_not_installed: 'Интеграция не установлена', st_failed: 'Ошибка подключения',
       admin_only: 'Подключать устройства может только администратор Home Assistant.',
       install_hint: 'Установите интеграцию через HACS и перезапустите Home Assistant — после этого её можно подключить здесь.',
@@ -97,6 +105,14 @@
       home_screen: 'Sākuma ekrāns', settings: 'Iestatījumi', theme: 'Tēma', dark: 'Tumšā', light: 'Gaišā', auto: 'Auto',
       language: 'Valoda', accent: 'Akcenta krāsa',
       acs: 'Kondicionieri', panel_settings: 'Paneļa iestatījumi', devices: 'Ierīču pieslēgšana', connect: 'Pieslēgt', add_more: 'Pievienot vēl',
+      np_title: 'NSPanel panelis', np_sub: 'Ekrāns, ekrānsaudzētājs, tuvuma sensors, restarts', np_state: 'Paneļa stāvoklis', np_screen_sec: 'Ekrāns un ekrānsaudzētājs',
+      np_prox_sec: 'Tuvuma sensors', np_reboot_sec: 'Nakts restarts', np_adb: 'ADB savienojums', np_screen: 'Ekrāns', np_ip: 'IP adrese',
+      np_boot: 'Pēdējā ielāde', np_light: 'Apgaismojums', np_prox: 'Tuvums', np_app: 'HA lietotne', np_tools: 'NSPanel Pro Tools',
+      np_setup: 'Notiek iestatīšana', np_link_ok: 'Ir', np_link_no: 'Nav savienojuma', np_sysctl: 'Vadības pogas un aplis', np_ss: 'Ekrānsaudzētājs',
+      np_ss_after: 'Ekrānsaudzētājs pēc', np_bright: 'Ekrāna spilgtums', np_ss_bright: 'Ekrānsaudzētāja spilgtums', np_thr: 'Slieksnis', np_measure: 'Mērīt 10 s',
+      np_peak: 'Maksimums', np_now: 'Tagad', np_prox_help: 'Mazāks slieksnis — panelis pamostas no tālienes, lielāks — roka jāpietuvina tuvāk. 0 — NSPanel Pro Tools noklusējums. Slieksnim jābūt manāmi virs fona.',
+      np_nightly: 'Restartēt naktī', np_reboot_at: 'Restarta laiks', np_yes: 'Jā', np_no: 'Nē', np_s: 's', np_min: 'min',
+      np_none: 'NSPanel Pro integrācija nav atrasta. Uzstādiet un pieslēdziet to — tad šeit parādīsies paneļa iestatījumi.',
       st_connected: 'Pieslēgts', st_not_setup: 'Nav pieslēgts', st_not_installed: 'Integrācija nav instalēta', st_failed: 'Pieslēgšanas kļūda',
       admin_only: 'Ierīces var pieslēgt tikai Home Assistant administrators.',
       install_hint: 'Instalējiet integrāciju ar HACS un pārstartējiet Home Assistant — pēc tam to var pieslēgt šeit.',
@@ -147,6 +163,14 @@
       home_screen: 'Start screen', settings: 'Settings', theme: 'Theme', dark: 'Dark', light: 'Light', auto: 'Auto',
       language: 'Language', accent: 'Accent colour',
       acs: 'Air conditioners', panel_settings: 'Panel settings', devices: 'Connect devices', connect: 'Connect', add_more: 'Add another',
+      np_title: 'NSPanel panel', np_sub: 'Screen, screensaver, proximity sensor, reboot', np_state: 'Panel status', np_screen_sec: 'Screen and screensaver',
+      np_prox_sec: 'Proximity sensor', np_reboot_sec: 'Nightly reboot', np_adb: 'ADB connection', np_screen: 'Screen', np_ip: 'IP address',
+      np_boot: 'Last boot', np_light: 'Illuminance', np_prox: 'Proximity', np_app: 'HA app', np_tools: 'NSPanel Pro Tools',
+      np_setup: 'Setup running', np_link_ok: 'Connected', np_link_no: 'No connection', np_sysctl: 'Control buttons and circle', np_ss: 'Screensaver',
+      np_ss_after: 'Screensaver after', np_bright: 'Screen brightness', np_ss_bright: 'Screensaver brightness', np_thr: 'Threshold', np_measure: 'Measure 10 s',
+      np_peak: 'Peak', np_now: 'Now', np_prox_help: 'A lower threshold wakes the panel from further away, a higher one needs your hand closer. 0 is the NSPanel Pro Tools default. Keep it well above the background level.',
+      np_nightly: 'Reboot at night', np_reboot_at: 'Reboot time', np_yes: 'Yes', np_no: 'No', np_s: 's', np_min: 'min',
+      np_none: 'NSPanel Pro integration not found. Install and set it up — panel settings will then appear here.',
       st_connected: 'Connected', st_not_setup: 'Not connected', st_not_installed: 'Integration not installed', st_failed: 'Connection error',
       admin_only: 'Only a Home Assistant administrator can connect devices.',
       install_hint: 'Install the integration with HACS and restart Home Assistant — then it can be connected here.',
@@ -233,6 +257,30 @@
     return Object.keys(reg).filter(function (e) {
       return platforms.indexOf(reg[e].platform) >= 0 && (!domain || e.split('.')[0] === domain) && !reg[e].hidden;
     }).sort();
+  }
+  /* the NSPanel Pro manager integration (platform nspanel_pro): its entities by translation key, first panel;
+     light and proximity come from the panel's HA companion app, named after the same device */
+  var NP_KEYS = ['connected', 'screen', 'ip_address', 'last_boot', 'companion_version', 'tools_version', 'provisioning',
+    'system_controls', 'screensaver', 'screensaver_timeout', 'brightness', 'dim_brightness',
+    'proximity_threshold', 'measure_proximity', 'proximity_peak', 'proximity', 'nightly_reboot', 'reboot_time'];
+  function nspanelFields(hass) {
+    var reg = (hass && hass.entities) || {}, out = {}, dev = null;
+    Object.keys(reg).sort().forEach(function (e) {
+      var r = reg[e];
+      if (r.platform !== 'nspanel_pro' || !r.translation_key || NP_KEYS.indexOf(r.translation_key) < 0) return;
+      if (dev && r.device_id !== dev) return;
+      dev = r.device_id;
+      if (!out[r.translation_key]) out[r.translation_key] = e;
+    });
+    if (!dev) return null;
+    var base = out.screen || out.connected;
+    if (base) {
+      var obj = base.split('.')[1].replace(/_(screen|adb_connection|connected)$/, '');
+      var st = hass.states || {};
+      if (st['sensor.' + obj + '_light']) out.light = 'sensor.' + obj + '_light';
+      if (st['sensor.' + obj + '_proximity'] && 'sensor.' + obj + '_proximity' !== out.proximity) out.raw_proximity = 'sensor.' + obj + '_proximity';
+    }
+    return out;
   }
   /* the entities of one EWPE HP unit, by card field; the first unit unless one is named */
   function ewpeFields(hass, unit) {
@@ -602,6 +650,15 @@
     '.dv-b{border:0;border-radius:14px;padding:10px 16px;font:inherit;font-weight:600;background:var(--accent);color:#fff;cursor:pointer;flex:none}',
     '.dv-b.soft{background:rgba(var(--acc-rgb),.14);color:var(--accent)}',
     '.dv-note{font-size:12.5px;color:var(--tx2);text-align:center;padding:0 8px}',
+    '.np-r{display:flex;align-items:center;gap:10px;padding:8px 2px;width:100%;box-sizing:border-box;border:0;background:none;font:inherit;color:var(--tx);text-align:left}',
+    '.np-r+.np-r{border-top:1px solid var(--sf3)}.np-r>ha-icon{--mdc-icon-size:20px;color:var(--tx2);flex:none}',
+    '.np-l{flex:1 1 auto;font-size:14.5px;min-width:0}.np-v{font-size:14.5px;font-weight:600;text-align:right;white-space:nowrap}.np-v small{color:var(--tx2);font-weight:500}',
+    '.np-sw{cursor:pointer}.np-sw.dis{opacity:.4;pointer-events:none}.np-r ha-icon.np-t{--mdc-icon-size:40px;color:var(--tx3)}.np-r ha-icon.np-t.on{color:var(--accent)}',
+    '.np-b{padding:3px 10px;border-radius:10px;background:var(--sf3);font-size:13px}.np-b.ok{background:rgba(46,158,91,.16);color:var(--ok,#2e9e5b)}.np-b.bad{background:rgba(229,72,77,.16);color:var(--err,#e5484d)}',
+    '.np-g{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.np-n{flex:1 1 200px;display:flex;min-width:0}.np-n .stp{background:var(--sf2);box-shadow:none}',
+    '.np-m{flex:1 1 200px;display:flex;flex-direction:column;justify-content:center;background:var(--sf2);border-radius:22px;padding:6px 12px}',
+    '.np-mb{display:flex;align-items:center;justify-content:center;gap:6px;margin:6px 0 4px}.np-mb ha-icon{--mdc-icon-size:18px}',
+    '.np-h{font-size:12px;color:var(--tx3);margin-top:8px;line-height:1.35}',
     '.fl{display:flex;flex-direction:column;gap:10px}.fl-st{font-size:16px;font-weight:700}.fl-d{font-size:13.5px;color:var(--tx2);white-space:pre-line}',
     '.fl-form{display:flex;flex-direction:column;gap:10px}.fl-f{display:flex;flex-direction:column;gap:5px}',
     '.fl-l{font-size:13px;font-weight:600;color:var(--tx2)}.fl-h{font-size:11.5px;color:var(--tx3)}',
@@ -744,7 +801,7 @@
       this._hpBase = this._c._hp;
       this._watchBase = this._watch;
       if (this._hass) { this._auto(); this._ewpe(); }
-      if (['home', 'menu', 'weather', 'rec', 'ac', 'hp', 'solar', 'devices', 'flow'].indexOf(this._page) < 0) this._page = 'home';
+      if (['home', 'menu', 'weather', 'rec', 'ac', 'hp', 'solar', 'devices', 'flow', 'npanel'].indexOf(this._page) < 0) this._page = 'home';
       if (this._hass && this._pageEl) this._render(true);
     }
 
@@ -860,6 +917,10 @@
       for (var i = 0; i < w.length; i++) {
         var s = st[w[i]];
         out.push(s ? s.last_updated + s.state : '-');
+      }
+      if (this._page === 'npanel') {
+        var np = nspanelFields(this._hass) || {};
+        Object.keys(np).forEach(function (k) { var x = st[np[k]]; out.push(x ? x.last_updated + x.state : '-'); });
       }
       return out.join('|');
     }
@@ -2093,9 +2154,117 @@
             (on ? ';box-shadow:0 0 0 3px var(--sf),0 0 0 5px ' + ACCENTS[k] : '') + '">' + (on ? ic('mdi:check') : '') + '</button>';
         }).join('') + '</div></div>' +
         '<div class="sec"><div class="sec-t">' + ic('mdi:cog-outline') + esc(this.t('panel_settings')) + '</div>' +
+        '<button class="opt wide" data-a="nav" data-p="npanel">' + ic('mdi:tablet-dashboard') + '<span class="opt-t">' + esc(this.t('np_title')) + '</span>' +
+        ic('mdi:chevron-right', 'opt-go') + '</button>' +
         '<button class="opt wide" data-a="nav" data-p="devices">' + ic('mdi:devices') + '<span class="opt-t">' + esc(this.t('devices')) + '</span>' +
         ic('mdi:chevron-right', 'opt-go') + '</button></div>' +
         '<div class="about">NSPanel Pro Card v' + VERSION + '</div>';
+    }
+
+    /* ============================================================ NSPANEL */
+    /* the panel's own settings from the NSPanel Pro integration (status, screen, proximity, nightly reboot) */
+    _npVal(eid, unit) {
+      var s = this._st(eid);
+      if (!s || s.state === 'unavailable' || s.state === 'unknown') return '—';
+      var n = parseFloat(s.state);
+      return esc(isNaN(n) || /[^0-9.\-]/.test(s.state) ? s.state : String(Math.round(n * 10) / 10)) +
+        (unit !== false && s.attributes.unit_of_measurement ? '<small> ' + esc(s.attributes.unit_of_measurement) + '</small>' : '');
+    }
+    _npRow(icon, label, valueHtml, cls) {
+      return '<div class="np-r' + (cls ? ' ' + cls : '') + '">' + ic(icon) + '<span class="np-l">' + esc(label) + '</span><span class="np-v">' + valueHtml + '</span></div>';
+    }
+    _npSwitch(eid, icon, label) {
+      if (!eid) return '';
+      var on = this._isOn(eid), s = this._st(eid);
+      var dis = !s || s.state === 'unavailable';
+      return '<button class="np-r np-sw' + (dis ? ' dis' : '') + '" data-a="toggle" data-e="' + eid + '">' + ic(icon) +
+        '<span class="np-l">' + esc(label) + '</span>' + ic(on ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off-outline', 'np-t' + (on ? ' on' : '')) + '</button>';
+    }
+    _npNumber(eid, icon, label, fmt) {
+      if (!eid) return '';
+      var s = this._st(eid);
+      var v = this._pv(eid, s ? parseFloat(s.state) : NaN);
+      return '<div class="np-n">' + this._stepper(label, icon, isNaN(v) ? '—' : fmt(v), 'np_num', eid, { small: true, disabled: !s || s.state === 'unavailable' }) + '</div>';
+    }
+    _npDur(v) {
+      v = Math.round(v);
+      if (v < 60) return v + '<small> ' + esc(this.t('np_s')) + '</small>';
+      var m = Math.floor(v / 60), r = v % 60;
+      return m + '<small> ' + esc(this.t('np_min')) + '</small>' + (r ? ' ' + r + '<small> ' + esc(this.t('np_s')) + '</small>' : '');
+    }
+    _npStep(eid, cur, dir) {
+      var r = (this._hass.entities || {})[eid] || {};
+      var tk = r.translation_key;
+      if (tk === 'screensaver_timeout') {
+        var up = dir > 0;
+        if (cur < 60 || (cur === 60 && !up)) return 15;
+        if (cur < 600 || (cur === 600 && !up)) return 60;
+        return 300;
+      }
+      if (tk === 'proximity_threshold') return cur < 500 || (cur === 500 && dir < 0) ? 25 : 100;
+      if (tk === 'brightness' || tk === 'dim_brightness') return 5;
+      var s = this._st(eid);
+      return Number(s && s.attributes.step) || 1;
+    }
+    _npTime(eid) {
+      var s = this._st(eid);
+      var v = this._pv(eid, s ? s.state : '');
+      var m = /^(\d{1,2}):(\d{2})/.exec(v || '');
+      return m ? ('0' + m[1]).slice(-2) + ':' + m[2] : '—';
+    }
+    _p_npanel() {
+      var f = nspanelFields(this._hass), self = this;
+      var hdr = this._hdr(this.t('np_title'), this.t('panel_settings'), { back: 'menu' });
+      if (!f) return hdr + '<div class="dv"><div class="dv-note">' + esc(this.t('np_none')) + '</div></div>';
+      var yn = function (eid, yes, no, warnOff) {
+        var s = self._st(eid);
+        if (!s || s.state === 'unavailable') return '—';
+        var on = s.state === 'on';
+        return '<span class="np-b' + (on ? ' ok' : warnOff ? ' bad' : '') + '">' + esc(on ? yes : no) + '</span>';
+      };
+      var boot = '—', bs = this._st(f.last_boot);
+      if (bs && bs.state && bs.state !== 'unknown' && bs.state !== 'unavailable') {
+        var dt = new Date(bs.state);
+        if (!isNaN(dt)) boot = esc(dt.toLocaleString(this._curLang === 'lv' ? 'lv-LV' : this._curLang === 'en' ? 'en-GB' : 'ru-RU',
+          { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }));
+      }
+      var rows = [];
+      if (f.connected) rows.push(this._npRow('mdi:usb', this.t('np_adb'), yn(f.connected, this.t('np_link_ok'), this.t('np_link_no'), true)));
+      if (f.screen) rows.push(this._npRow('mdi:monitor', this.t('np_screen'), yn(f.screen, this.t('on'), this.t('off'))));
+      if (f.ip_address) rows.push(this._npRow('mdi:ip-network', this.t('np_ip'), this._npVal(f.ip_address)));
+      if (f.last_boot) rows.push(this._npRow('mdi:restart', this.t('np_boot'), boot));
+      if (f.light) rows.push(this._npRow('mdi:brightness-5', this.t('np_light'), this._npVal(f.light)));
+      if (f.raw_proximity) rows.push(this._npRow('mdi:leak', this.t('np_prox'), this._npVal(f.raw_proximity)));
+      if (f.companion_version) rows.push(this._npRow('mdi:home-assistant', this.t('np_app'), this._npVal(f.companion_version)));
+      if (f.tools_version) rows.push(this._npRow('mdi:tools', this.t('np_tools'), this._npVal(f.tools_version)));
+      if (f.provisioning) rows.push(this._npRow('mdi:progress-wrench', this.t('np_setup'), yn(f.provisioning, this.t('np_yes'), this.t('np_no'))));
+      var sec = function (icon, title, body) { return body ? '<div class="sec"><div class="sec-t">' + ic(icon) + esc(title) + '</div>' + body + '</div>' : ''; };
+      var pct = function (v) { return Math.round(v) + '<small>%</small>'; };
+      var screen = this._npSwitch(f.system_controls, 'mdi:gesture-tap-button', this.t('np_sysctl')) +
+        this._npSwitch(f.screensaver, 'mdi:monitor-shimmer', this.t('np_ss')) +
+        '<div class="np-g">' +
+        this._npNumber(f.screensaver_timeout, 'mdi:timer-outline', this.t('np_ss_after'), function (v) { return self._npDur(v); }) +
+        this._npNumber(f.brightness, 'mdi:brightness-6', this.t('np_bright'), pct) +
+        this._npNumber(f.dim_brightness, 'mdi:brightness-4', this.t('np_ss_bright'), pct) + '</div>';
+      var prox = '';
+      if (f.proximity_threshold || f.proximity || f.proximity_peak) {
+        prox = '<div class="np-g">' + this._npNumber(f.proximity_threshold, 'mdi:ruler', this.t('np_thr'), function (v) { return String(Math.round(v)); }) +
+          '<div class="np-m">' + (f.proximity ? this._npRow('mdi:leak', this.t('np_now'), this._npVal(f.proximity, false)) : '') +
+          (f.proximity_peak ? this._npRow('mdi:chart-bell-curve', this.t('np_peak'), this._npVal(f.proximity_peak, false)) : '') +
+          (f.measure_proximity ? '<button class="dv-b np-mb" data-a="np_press" data-e="' + f.measure_proximity + '">' + ic('mdi:timer-play-outline') + esc(this.t('np_measure')) + '</button>' : '') +
+          '</div></div><div class="np-h">' + esc(this.t('np_prox_help')) + '</div>';
+      }
+      var reboot = this._npSwitch(f.nightly_reboot, 'mdi:restart-alert', this.t('np_nightly'));
+      if (f.reboot_time) {
+        var ts = this._st(f.reboot_time);
+        reboot += '<div class="np-g"><div class="np-n">' + this._stepper(this.t('np_reboot_at'), 'mdi:clock-outline', this._npTime(f.reboot_time), 'np_time', f.reboot_time,
+          { small: true, disabled: !ts || ts.state === 'unavailable' }) + '</div></div>';
+      }
+      return hdr + '<div class="dv np">' +
+        sec('mdi:information-outline', this.t('np_state'), rows.join('')) +
+        sec('mdi:monitor-dashboard', this.t('np_screen_sec'), screen) +
+        sec('mdi:hand-wave-outline', this.t('np_prox_sec'), prox) +
+        sec('mdi:weather-night', this.t('np_reboot_sec'), reboot) + '</div>';
     }
 
     /* =========================================================== DEVICES */
@@ -2369,6 +2538,28 @@
         case 'cbtn': { var b = c._buttons[Number(d('i'))]; if (b) this._runButton(b); return; }
         case 'sheet': this._sheet = { kind: d('v') }; this._render(); return;
         case 'sheet_close': this._sheet = null; this._render(); return;
+        case 'np_press': this._press(d('e')); return;
+        case 'np_num': {
+          var ne = d('k2'), nsx = this._st(ne);
+          if (!nsx) return;
+          var ncur = this._pv(ne, parseFloat(nsx.state)), ndir = Number(d('d'));
+          var nstep = this._npStep(ne, isNaN(ncur) ? 0 : ncur, ndir);
+          this._bump(ne, ncur, ndir * nstep, Number(nsx.attributes.min), Number(nsx.attributes.max), nstep, function (v) { self._setNumber(ne, v); });
+          return;
+        }
+        case 'np_time': {
+          var te = d('k2'), tsx = this._st(te);
+          if (!tsx) return;
+          var tm = /^(\d{1,2}):(\d{2})/.exec(this._pv(te, tsx.state) || '00:00') || [0, 0, 0];
+          var mins = ((Number(tm[1]) * 60 + Number(tm[2]) + Number(d('d')) * 15) % 1440 + 1440) % 1440;
+          mins = Math.round(mins / 15) * 15 % 1440;
+          var tv = ('0' + Math.floor(mins / 60)).slice(-2) + ':' + ('0' + mins % 60).slice(-2) + ':00';
+          this._pending[te] = { v: tv, ts: Date.now() };
+          clearTimeout(this._timers[te]);
+          this._timers[te] = setTimeout(function () { self._call('time', 'set_value', { entity_id: te, time: tv }); }, 650);
+          this._render();
+          return;
+        }
         case 'flow_start': this._flowStart(d('v')); return;
         case 'flow_menu': this._flowSend({ next_step_id: d('v') }); return;
         case 'flow_pick': if (this._flow) { this._flow.vals[d('f')] = d('v'); this._render(); } return;
