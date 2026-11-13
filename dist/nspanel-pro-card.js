@@ -2166,8 +2166,8 @@
     _npVal(eid, unit) {
       var s = this._st(eid);
       if (!s || s.state === 'unavailable' || s.state === 'unknown') return '—';
-      var n = parseFloat(s.state);
-      return esc(isNaN(n) || /[^0-9.\-]/.test(s.state) ? s.state : String(Math.round(n * 10) / 10)) +
+      var n = Number(s.state);
+      return esc(s.state.trim() === '' || !isFinite(n) ? s.state : String(Math.round(n * 10) / 10)) +
         (unit !== false && s.attributes.unit_of_measurement ? '<small> ' + esc(s.attributes.unit_of_measurement) + '</small>' : '');
     }
     _npRow(icon, label, valueHtml, cls) {
